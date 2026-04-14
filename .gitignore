@@ -1,0 +1,16 @@
+.DS_Store
+.build/
+.swiftpm/
+.venv/
+.data/
+DerivedData/
+Pods/
+*.xcworkspace
+xcuserdata/
+*.xcuserdatad/
+*.xcuserstate
+backend/.pytest_cache/
+backend/.coverage
+backend/.env
+backend/*.egg-info/
+infra/.env

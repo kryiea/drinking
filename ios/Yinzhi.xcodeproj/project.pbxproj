@@ -1,0 +1,541 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		07276FE1E448C37AE80F8C44 /* Clients.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C86086E6CBF66BEADEBA5E4 /* Clients.swift */; };
+		294F09377584ED6D5342B900 /* AppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2965E09121192E51639D5B86 /* AppConfig.swift */; };
+		2F2D2FD7731724BC6FCDCC65 /* InsightsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CDD135660357C61D39E4156 /* InsightsView.swift */; };
+		35EDC78D686DCEF6988A9379 /* SmokeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 851E9BEF1C7DFA5A7BCED10B /* SmokeTests.swift */; };
+		54F3EACAC17DDCE8B21C3A4F /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3995D7DFD51DADBAA97B150 /* ProfileView.swift */; };
+		632B1F3972E5682B64127013 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8032AD51B6189EAEBA7A49C4 /* HomeView.swift */; };
+		70BF334260F9D09151D05047 /* AppModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B4A7F4828B7F1C72F62AAD9 /* AppModels.swift */; };
+		7853952B565DA8BD673EB3B5 /* LogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBF6D36033A1AC2D14EB371D /* LogView.swift */; };
+		7D39259F4BB0D2DC516D8610 /* YinzhiApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A33E0DAC856CB8B6FC45BDF8 /* YinzhiApp.swift */; };
+		9DA39DE55F477E09E19BB2ED /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E145B99A82C06BE11A10FCEE /* OnboardingView.swift */; };
+		BABBA089DE956DFF9FB03DC2 /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = E36D72517F931DE38E05922B /* DesignSystem.swift */; };
+		C96373AE55C336FC7472BBA0 /* SessionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9122487578B49CD2EB7C51E /* SessionStore.swift */; };
+		E0E87A9BFBE21FA0C6F1D9FB /* OfflineCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CFBAF2DF0653639D21DFD99 /* OfflineCache.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		150EF3CA0A2086994C570B99 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = EB3C08E9073830E517C128BF /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 3BC83F352A32C64CD434EABA;
+			remoteInfo = Yinzhi;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		145A00933EC9F96BDF9B98B6 /* Yinzhi.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Yinzhi.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		1B4A7F4828B7F1C72F62AAD9 /* AppModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModels.swift; sourceTree = "<group>"; };
+		2965E09121192E51639D5B86 /* AppConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfig.swift; sourceTree = "<group>"; };
+		3CFBAF2DF0653639D21DFD99 /* OfflineCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OfflineCache.swift; sourceTree = "<group>"; };
+		8032AD51B6189EAEBA7A49C4 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		851E9BEF1C7DFA5A7BCED10B /* SmokeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmokeTests.swift; sourceTree = "<group>"; };
+		879F23671B231C07FFCFC9AA /* YinzhiTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = YinzhiTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		8CDD135660357C61D39E4156 /* InsightsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsightsView.swift; sourceTree = "<group>"; };
+		9C86086E6CBF66BEADEBA5E4 /* Clients.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Clients.swift; sourceTree = "<group>"; };
+		A33E0DAC856CB8B6FC45BDF8 /* YinzhiApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YinzhiApp.swift; sourceTree = "<group>"; };
+		A9122487578B49CD2EB7C51E /* SessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionStore.swift; sourceTree = "<group>"; };
+		D83180B5917B36FFDBFDEA20 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		E145B99A82C06BE11A10FCEE /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		E36D72517F931DE38E05922B /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
+		E3995D7DFD51DADBAA97B150 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
+		EBF6D36033A1AC2D14EB371D /* LogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogView.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		09630DFB201CEF2DA3D65E82 /* Features */ = {
+			isa = PBXGroup;
+			children = (
+				97C8BADB9510485C4270ECD8 /* Home */,
+				92FEC551E19C3D2DB6D0A729 /* Insights */,
+				FA1B557AB4DAAF9AD53B05A9 /* Log */,
+				0DA7D37C4E81CB4031E66B60 /* Onboarding */,
+				735FCDE58E27244FAFB169C2 /* Profile */,
+			);
+			path = Features;
+			sourceTree = "<group>";
+		};
+		0DA7D37C4E81CB4031E66B60 /* Onboarding */ = {
+			isa = PBXGroup;
+			children = (
+				E145B99A82C06BE11A10FCEE /* OnboardingView.swift */,
+			);
+			path = Onboarding;
+			sourceTree = "<group>";
+		};
+		113F154A3A4FDFA8780688C8 /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				299A2C551F1D5B6B213DC69F /* Design */,
+				B84A6B40134A8BE4BA06625B /* Models */,
+				F1689C8EBAD1DFB0D39B2CE0 /* Networking */,
+				D4006FC68198412D07D80499 /* Storage */,
+			);
+			path = Core;
+			sourceTree = "<group>";
+		};
+		299A2C551F1D5B6B213DC69F /* Design */ = {
+			isa = PBXGroup;
+			children = (
+				E36D72517F931DE38E05922B /* DesignSystem.swift */,
+			);
+			path = Design;
+			sourceTree = "<group>";
+		};
+		538711088872E850734E79DF = {
+			isa = PBXGroup;
+			children = (
+				E017AE931522A55ECE7CD1D4 /* Yinzhi */,
+				DF231B726D2F98718EF9E180 /* YinzhiTests */,
+				80F14A8BF78FAC5AC6437454 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		735FCDE58E27244FAFB169C2 /* Profile */ = {
+			isa = PBXGroup;
+			children = (
+				E3995D7DFD51DADBAA97B150 /* ProfileView.swift */,
+			);
+			path = Profile;
+			sourceTree = "<group>";
+		};
+		80F14A8BF78FAC5AC6437454 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				145A00933EC9F96BDF9B98B6 /* Yinzhi.app */,
+				879F23671B231C07FFCFC9AA /* YinzhiTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		92FEC551E19C3D2DB6D0A729 /* Insights */ = {
+			isa = PBXGroup;
+			children = (
+				8CDD135660357C61D39E4156 /* InsightsView.swift */,
+			);
+			path = Insights;
+			sourceTree = "<group>";
+		};
+		97C8BADB9510485C4270ECD8 /* Home */ = {
+			isa = PBXGroup;
+			children = (
+				8032AD51B6189EAEBA7A49C4 /* HomeView.swift */,
+			);
+			path = Home;
+			sourceTree = "<group>";
+		};
+		ACEFF8B47C71B03B55AEFD37 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				A33E0DAC856CB8B6FC45BDF8 /* YinzhiApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		B84A6B40134A8BE4BA06625B /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				1B4A7F4828B7F1C72F62AAD9 /* AppModels.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		D4006FC68198412D07D80499 /* Storage */ = {
+			isa = PBXGroup;
+			children = (
+				3CFBAF2DF0653639D21DFD99 /* OfflineCache.swift */,
+				A9122487578B49CD2EB7C51E /* SessionStore.swift */,
+			);
+			path = Storage;
+			sourceTree = "<group>";
+		};
+		DF231B726D2F98718EF9E180 /* YinzhiTests */ = {
+			isa = PBXGroup;
+			children = (
+				851E9BEF1C7DFA5A7BCED10B /* SmokeTests.swift */,
+			);
+			path = YinzhiTests;
+			sourceTree = "<group>";
+		};
+		E017AE931522A55ECE7CD1D4 /* Yinzhi */ = {
+			isa = PBXGroup;
+			children = (
+				D83180B5917B36FFDBFDEA20 /* Info.plist */,
+				ACEFF8B47C71B03B55AEFD37 /* App */,
+				113F154A3A4FDFA8780688C8 /* Core */,
+				09630DFB201CEF2DA3D65E82 /* Features */,
+			);
+			path = Yinzhi;
+			sourceTree = "<group>";
+		};
+		F1689C8EBAD1DFB0D39B2CE0 /* Networking */ = {
+			isa = PBXGroup;
+			children = (
+				2965E09121192E51639D5B86 /* AppConfig.swift */,
+				9C86086E6CBF66BEADEBA5E4 /* Clients.swift */,
+			);
+			path = Networking;
+			sourceTree = "<group>";
+		};
+		FA1B557AB4DAAF9AD53B05A9 /* Log */ = {
+			isa = PBXGroup;
+			children = (
+				EBF6D36033A1AC2D14EB371D /* LogView.swift */,
+			);
+			path = Log;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		3BC83F352A32C64CD434EABA /* Yinzhi */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 89D902ED36E7DF463F2CF292 /* Build configuration list for PBXNativeTarget "Yinzhi" */;
+			buildPhases = (
+				6A84C65DF51737871507DDE8 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Yinzhi;
+			packageProductDependencies = (
+			);
+			productName = Yinzhi;
+			productReference = 145A00933EC9F96BDF9B98B6 /* Yinzhi.app */;
+			productType = "com.apple.product-type.application";
+		};
+		677349D1CAE2144BF6580788 /* YinzhiTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 54FD29EE18A4B1C3B9BED48D /* Build configuration list for PBXNativeTarget "YinzhiTests" */;
+			buildPhases = (
+				7BF6778C4F45C76BA08B2B51 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				9344B2B6B32858C49831431F /* PBXTargetDependency */,
+			);
+			name = YinzhiTests;
+			packageProductDependencies = (
+			);
+			productName = YinzhiTests;
+			productReference = 879F23671B231C07FFCFC9AA /* YinzhiTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		EB3C08E9073830E517C128BF /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					3BC83F352A32C64CD434EABA = {
+						DevelopmentTeam = "";
+					};
+					677349D1CAE2144BF6580788 = {
+						DevelopmentTeam = "";
+					};
+				};
+			};
+			buildConfigurationList = 754AE5AEB40AE658C415ED1F /* Build configuration list for PBXProject "Yinzhi" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 538711088872E850734E79DF;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 80F14A8BF78FAC5AC6437454 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				3BC83F352A32C64CD434EABA /* Yinzhi */,
+				677349D1CAE2144BF6580788 /* YinzhiTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		6A84C65DF51737871507DDE8 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				294F09377584ED6D5342B900 /* AppConfig.swift in Sources */,
+				70BF334260F9D09151D05047 /* AppModels.swift in Sources */,
+				07276FE1E448C37AE80F8C44 /* Clients.swift in Sources */,
+				BABBA089DE956DFF9FB03DC2 /* DesignSystem.swift in Sources */,
+				632B1F3972E5682B64127013 /* HomeView.swift in Sources */,
+				2F2D2FD7731724BC6FCDCC65 /* InsightsView.swift in Sources */,
+				7853952B565DA8BD673EB3B5 /* LogView.swift in Sources */,
+				E0E87A9BFBE21FA0C6F1D9FB /* OfflineCache.swift in Sources */,
+				9DA39DE55F477E09E19BB2ED /* OnboardingView.swift in Sources */,
+				54F3EACAC17DDCE8B21C3A4F /* ProfileView.swift in Sources */,
+				C96373AE55C336FC7472BBA0 /* SessionStore.swift in Sources */,
+				7D39259F4BB0D2DC516D8610 /* YinzhiApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7BF6778C4F45C76BA08B2B51 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				35EDC78D686DCEF6988A9379 /* SmokeTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		9344B2B6B32858C49831431F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 3BC83F352A32C64CD434EABA /* Yinzhi */;
+			targetProxy = 150EF3CA0A2086994C570B99 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		01E0C815F84792BB2787EA88 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = "";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = Yinzhi;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+		0CE019A95205D5538051EC7C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				INFOPLIST_FILE = Yinzhi/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "饮知";
+				INFOPLIST_KEY_NSAppTransportSecurity_NSAllowsLocalNetworking = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_YINZHI_API_BASE_URL = "http://127.0.0.1:8000";
+				INFOPLIST_KEY_YINZHI_DEVELOPMENT_TOKEN_SEED = "yinzhi-local-dev";
+				INFOPLIST_KEY_YINZHI_DEVICE_NAME = "";
+				INFOPLIST_KEY_YINZHI_ENABLE_PREVIEW_FALLBACK = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.luca.yinzhi;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		307E9BE8DD78EB5B6A7FB3EE /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Yinzhi.app/Yinzhi";
+			};
+			name = Debug;
+		};
+		53888320D85310D17E4193C3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				INFOPLIST_FILE = Yinzhi/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "饮知";
+				INFOPLIST_KEY_NSAppTransportSecurity_NSAllowsLocalNetworking = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_YINZHI_API_BASE_URL = "http://127.0.0.1:8000";
+				INFOPLIST_KEY_YINZHI_DEVELOPMENT_TOKEN_SEED = "yinzhi-local-dev";
+				INFOPLIST_KEY_YINZHI_DEVICE_NAME = "";
+				INFOPLIST_KEY_YINZHI_ENABLE_PREVIEW_FALLBACK = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.luca.yinzhi;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		D08495FB8A8A34373C7B7DD1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = Yinzhi;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		D5F304611B44D441185DD6CF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Yinzhi.app/Yinzhi";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		54FD29EE18A4B1C3B9BED48D /* Build configuration list for PBXNativeTarget "YinzhiTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				307E9BE8DD78EB5B6A7FB3EE /* Debug */,
+				D5F304611B44D441185DD6CF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		754AE5AEB40AE658C415ED1F /* Build configuration list for PBXProject "Yinzhi" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D08495FB8A8A34373C7B7DD1 /* Debug */,
+				01E0C815F84792BB2787EA88 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		89D902ED36E7DF463F2CF292 /* Build configuration list for PBXNativeTarget "Yinzhi" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0CE019A95205D5538051EC7C /* Debug */,
+				53888320D85310D17E4193C3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = EB3C08E9073830E517C128BF /* Project object */;
+}
