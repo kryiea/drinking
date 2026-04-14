@@ -15,5 +15,6 @@
 - [x] Document environment limits and next steps
 - [x] Add brand-aware catalog data, brew calculator API, and support console with OpenAI-compatible LLM preview
 - [x] Refine Home and Log UX for denser visual hierarchy, brand filters, and Brew Lab interactions
+- [x] Upgrade Home into a decision-first layout and turn support page into a live developer console with presets and raw payload inspection
 - [x] Validate full iOS build and simulator smoke test under complete Xcode installation
 - [x] Add Podman VM proxy bridge flow that avoids mutating host VPN or macOS global proxy settings

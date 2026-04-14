@@ -137,7 +137,7 @@ def test_llm_preview_surfaces_provider_error_without_500(client: TestClient, mon
         )
         raise httpx.HTTPStatusError("upstream auth failed", request=request, response=response)
 
-    monkeypatch.setattr(settings, "llm_base_url", "https://api.moonshot.ai/v1")
+    monkeypatch.setattr(settings, "llm_base_url", "https://api.moonshot.cn/v1")
     monkeypatch.setattr(settings, "llm_api_key", "test-key")
     monkeypatch.setattr(settings, "llm_model", "kimi-k2-0905-preview")
     monkeypatch.setattr(httpx.AsyncClient, "post", fake_post)

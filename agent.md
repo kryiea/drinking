@@ -1,9 +1,9 @@
 # 饮知项目地图
 
 ## 当前阶段
-- 阶段: 本地联调链路与品牌化记录体验完成，进入鉴权、中间件收口与能力扩展阶段
-- 目标: 在前后端本地可运行的前提下，继续把服务端真源、支持平台、LLM 接入和更细的饮品场景做实
-- 状态: FastAPI 合同、SwiftUI App Shell、实时 typed clients、会话持久化、SwiftData 离线缓存和补同步路径已落地；后端已切到 SQLAlchemy 仓储，开发默认 SQLite、生产目标 PostgreSQL；support 页面、品牌目录、冲泡计算、OpenAI 兼容 LLM 适配和 `xcodebuild` 编译验证已完成，Podman 中间件通过 Podman VM 代理桥接继续收口
+- 阶段: 本地联调链路与品牌化记录体验完成，进入鉴权、中间件收口与体验精修阶段
+- 目标: 在前后端本地可运行的前提下，继续把服务端真源、支持平台、LLM 接入和更细的饮品场景做实，同时把首页和开发者后台磨到可持续演进
+- 状态: FastAPI 合同、SwiftUI App Shell、实时 typed clients、会话持久化、SwiftData 离线缓存和补同步路径已落地；后端已切到 SQLAlchemy 仓储，开发默认 SQLite、生产目标 PostgreSQL；support 页面、品牌目录、冲泡计算、OpenAI 兼容 LLM 适配和 `xcodebuild` 编译验证已完成，首页现已升级为“结论先行 + 下一步动作”结构，support 平台已升级为带预设提示词、原始 JSON 和服务状态的开发控制台，Podman 中间件通过 Podman VM 代理桥接继续收口
 
 ## 产品焦点
 - 核心闭环: 饮品记录 -> 健康解释 -> 行为建议
@@ -41,7 +41,8 @@
 - 后端仓储边界固定为 `AppRepository Protocol + SQLAlchemyRepository + session factory`，路由层不感知具体数据库实现
 - 开发环境默认落 SQLite 以避免中间件阻塞，PostgreSQL 通过 `YINZHI_DATABASE_URL` 切换
 - 饮品目录首版直接携带品牌、风味、冲泡方法和配方摘要，记录页承担品牌筛选与 Brew Lab 交互
-- support 平台作为开发者后台最小集，先覆盖反馈复核、规则状态和 OpenAI 兼容 LLM 联调
+- 首页首屏遵循“先判定、再操作、后解释”，风险说明移到横向建议轨道，避免长文案挤占决策区
+- support 平台作为开发者后台最小集，当前覆盖反馈复核、规则状态、OpenAI 兼容 LLM 联调、原始返回查看和服务快照刷新
 
 ## 未决问题
 - Apple 身份令牌的正式验签、公钥轮换和生产环境 secrets 管理
@@ -56,3 +57,4 @@
 3. 接入 HealthKit 最小读取集与截图回归基线
 4. 为 SQLAlchemy 层补 Alembic 迁移和 PostgreSQL 联调说明
 5. 为 support 平台增加登录保护、操作审计和规则开关持久化
+6. 继续压缩首页首屏信息密度，并为关键状态补截图回归基线
