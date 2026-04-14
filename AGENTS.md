@@ -17,6 +17,7 @@
 - `Sources/YinzhiCore`: shared pure Swift domain logic that can be tested without an iOS build.
 - `docs/`: long-lived product, architecture, decision, and quality records.
 - `openspec/`: per-change proposal, design, tasks, and specs.
+- `scripts/`: reproducible local environment, Podman, backend boot, and Xcode helper scripts.
 
 ## Quality Gates
 - Backend: lint-compatible code style, `pytest`, route smoke coverage, and recommendation logic tests.
@@ -28,7 +29,9 @@
 - Keep frontend and backend separated by explicit typed contracts.
 - Never let SwiftUI views call `URLSession` directly; all networking flows through typed clients.
 - Recommendation responses must remain explainable and deterministic in v1.
+- LLM integration must stay behind a backend adapter and support OpenAI-compatible providers by configuration.
 - Liquid Glass is opt-in for high-value surfaces only; provide material fallback for iOS 17-25.
+- Local infrastructure fixes must not mutate the host macOS VPN/proxy configuration; prefer Podman-only bridge scripts.
 - Prefer production-shaped seams even when local dev uses seed data or in-memory adapters.
 
 ## Validation Commands
@@ -36,6 +39,7 @@
 - Backend tests: `source .venv/bin/activate && pytest backend/tests`
 - Swift shared logic tests: `swift test`
 - Infra up: `./scripts/start-infra.sh`
+- Podman proxy bridge: `zsh ./scripts/configure-podman-proxy.sh`
 - iOS project generation: `./scripts/generate-ios-project.sh`
 
 ## Handoff Rules

@@ -49,6 +49,15 @@ struct ProfileView: View {
                 }
 
                 VStack(spacing: 12) {
+                    if environment.session == nil, environment.canUseRemoteAPI {
+                        Button("开发模式直连后端") {
+                            Task {
+                                await environment.signInWithDevelopmentToken()
+                            }
+                        }
+                        .buttonStyle(SecondaryGlassButtonStyle())
+                    }
+
                     if environment.pendingSyncCount > 0, environment.session != nil {
                         Button("立即补同步离线记录") {
                             Task {

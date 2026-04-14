@@ -13,4 +13,7 @@
 - [x] Replace in-memory backend repository with SQLAlchemy persistence and startup seed flow
 - [x] Add persistence regression coverage for app restart scenarios
 - [x] Document environment limits and next steps
-- [ ] Validate full iOS build and simulator smoke test under complete Xcode installation
+- [x] Add brand-aware catalog data, brew calculator API, and support console with OpenAI-compatible LLM preview
+- [x] Refine Home and Log UX for denser visual hierarchy, brand filters, and Brew Lab interactions
+- [x] Validate full iOS build and simulator smoke test under complete Xcode installation
+- [x] Add Podman VM proxy bridge flow that avoids mutating host VPN or macOS global proxy settings

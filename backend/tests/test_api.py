@@ -1,8 +1,10 @@
 from datetime import datetime
 
+import httpx
 import pytest
 from fastapi.testclient import TestClient
 
+from app.core.config import settings
 from app.main import create_app
 
 
@@ -19,6 +21,23 @@ def test_catalog_search_returns_seed_data(client: TestClient) -> None:
     assert response.status_code == 200
     payload = response.json()
     assert any(item["id"] == "jasmine-milk-tea" for item in payload)
+    assert any(item["brand"] == "MANNER" for item in client.get("/v1/drink-definitions", params={"brand": "MANNER"}).json())
+
+
+def test_brew_calculator_returns_scaled_recipe(client: TestClient) -> None:
+    response = client.post(
+        "/v1/drink-definitions/brew-calculator",
+        json={
+            "drink_definition_id": "pour-over-yirgacheffe",
+            "target_volume_ml": 390,
+            "strength": "bold",
+        },
+    )
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["method"] == "hand-brew"
+    assert payload["coffee_g"] > 18
+    assert "390ml" in payload["summary"]
 
 
 def test_log_insights_and_recommendations_round_trip(client: TestClient) -> None:
@@ -85,6 +104,48 @@ def test_admin_rules_can_be_updated(client: TestClient) -> None:
     snapshot = client.get("/v1/admin/snapshot")
     assert snapshot.status_code == 200
     assert snapshot.json()["pending_feedback"] >= 1
+    assert snapshot.json()["brand_count"] >= 3
+
+
+def test_support_endpoints_expose_llm_and_feedback_workflow(client: TestClient) -> None:
+    support_snapshot = client.get("/v1/admin/support")
+    assert support_snapshot.status_code == 200
+    support_payload = support_snapshot.json()
+    assert support_payload["admin"]["drink_count"] >= 5
+    assert support_payload["llm"]["configured"] is False
+
+    llm_preview = client.post("/v1/admin/llm-preview", json={"prompt": "给一条 UX 建议"})
+    assert llm_preview.status_code == 200
+    assert llm_preview.json()["mode"] == "fallback"
+
+    feedback = client.post("/v1/admin/feedback/feedback-1/review")
+    assert feedback.status_code == 200
+    assert feedback.json()["status"] == "reviewed"
+
+    support_page = client.get("/support")
+    assert support_page.status_code == 200
+    assert "Support Console" in support_page.text
+
+
+def test_llm_preview_surfaces_provider_error_without_500(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    async def fake_post(self, url, headers=None, json=None):  # pragma: no cover - exercised through route
+        request = httpx.Request("POST", url, headers=headers, json=json)
+        response = httpx.Response(
+            401,
+            request=request,
+            json={"error": {"message": "Invalid Authentication"}},
+        )
+        raise httpx.HTTPStatusError("upstream auth failed", request=request, response=response)
+
+    monkeypatch.setattr(settings, "llm_base_url", "https://api.moonshot.ai/v1")
+    monkeypatch.setattr(settings, "llm_api_key", "test-key")
+    monkeypatch.setattr(settings, "llm_model", "kimi-k2-0905-preview")
+    monkeypatch.setattr(httpx.AsyncClient, "post", fake_post)
+
+    llm_preview = client.post("/v1/admin/llm-preview", json={"prompt": "给一条 UX 建议"})
+    assert llm_preview.status_code == 200
+    assert llm_preview.json()["mode"] == "fallback"
+    assert "Invalid Authentication" in llm_preview.json()["output"]
 
 
 def test_data_persists_across_app_restarts(tmp_path) -> None:

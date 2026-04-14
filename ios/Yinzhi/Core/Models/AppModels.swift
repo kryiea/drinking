@@ -42,6 +42,14 @@ struct IngredientMetrics: Codable, Hashable, Sendable {
             volumeML: volumeML * ratio
         )
     }
+
+    enum CodingKeys: String, CodingKey {
+        case caffeineMG = "caffeine_mg"
+        case sugarG = "sugar_g"
+        case caloriesKcal = "calories_kcal"
+        case hydrationML = "hydration_ml"
+        case volumeML = "volume_ml"
+    }
 }
 
 struct DrinkServingOption: Identifiable, Codable, Hashable, Sendable {
@@ -49,6 +57,137 @@ struct DrinkServingOption: Identifiable, Codable, Hashable, Sendable {
     var name: String
     var volumeML: Int
     var multiplier: Double = 1.0
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case name
+        case volumeML = "volume_ml"
+        case multiplier
+    }
+}
+
+enum BrewMethod: String, Codable, Hashable, Sendable, CaseIterable {
+    case handBrew = "hand-brew"
+    case espressoMachine = "espresso-machine"
+    case milkTea = "milk-tea"
+    case sparkling = "sparkling"
+    case readyToDrink = "ready-to-drink"
+
+    var label: String {
+        switch self {
+        case .handBrew:
+            return "手冲"
+        case .espressoMachine:
+            return "咖啡机"
+        case .milkTea:
+            return "奶茶"
+        case .sparkling:
+            return "气泡饮"
+        case .readyToDrink:
+            return "即饮"
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .handBrew:
+            return "drop.circle"
+        case .espressoMachine:
+            return "cup.and.saucer.fill"
+        case .milkTea:
+            return "takeoutbag.and.cup.and.straw.fill"
+        case .sparkling:
+            return "sparkles"
+        case .readyToDrink:
+            return "refrigerator"
+        }
+    }
+}
+
+enum BrewStrength: String, Codable, Hashable, Sendable, CaseIterable, Identifiable {
+    case light
+    case balanced
+    case bold
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .light:
+            return "轻盈"
+        case .balanced:
+            return "均衡"
+        case .bold:
+            return "浓郁"
+        }
+    }
+
+    var factor: Double {
+        switch self {
+        case .light:
+            return 0.92
+        case .balanced:
+            return 1.0
+        case .bold:
+            return 1.08
+        }
+    }
+}
+
+struct BrewRecipeSummary: Codable, Hashable, Sendable {
+    var method: BrewMethod
+    var title: String
+    var ratioText: String
+    var coffeeG: Double
+    var waterML: Double
+    var outputML: Double
+    var milkML: Double
+    var concentrateML: Double
+    var brewSeconds: Int
+    var temperatureC: Int
+    var grindText: String?
+    var tastingNote: String?
+
+    func scaled(targetVolumeML: Int, strength: BrewStrength) -> BrewPreviewResult {
+        let base = max(outputML, 1)
+        let scale = Double(targetVolumeML) / base
+        return BrewPreviewResult(
+            targetVolumeML: targetVolumeML,
+            coffeeG: coffeeG * scale * strength.factor,
+            waterML: waterML * scale,
+            milkML: milkML * scale,
+            concentrateML: concentrateML * scale * strength.factor,
+            ratioText: ratioText,
+            title: title,
+            tastingNote: tastingNote
+        )
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case method
+        case title
+        case ratioText = "ratio_text"
+        case coffeeG = "coffee_g"
+        case waterML = "water_ml"
+        case outputML = "output_ml"
+        case milkML = "milk_ml"
+        case concentrateML = "concentrate_ml"
+        case brewSeconds = "brew_seconds"
+        case temperatureC = "temperature_c"
+        case grindText = "grind_text"
+        case tastingNote = "tasting_note"
+    }
+}
+
+struct BrewPreviewResult: Hashable, Sendable {
+    var targetVolumeML: Int
+    var coffeeG: Double
+    var waterML: Double
+    var milkML: Double
+    var concentrateML: Double
+    var ratioText: String
+    var title: String
+    var tastingNote: String?
 }
 
 struct DrinkDefinitionSummary: Identifiable, Codable, Hashable, Sendable {
@@ -56,12 +195,34 @@ struct DrinkDefinitionSummary: Identifiable, Codable, Hashable, Sendable {
     var name: String
     var category: String
     var brand: String
+    var brandCollection: String?
     var tags: [String]
+    var heroFlavor: String?
+    var preparationMethods: [BrewMethod]?
+    var brewRecipe: BrewRecipeSummary?
     var metrics: IngredientMetrics
     var servingOptions: [DrinkServingOption]
 
     var preferredServing: DrinkServingOption {
         servingOptions.first ?? DrinkServingOption(id: "default", name: "标准份", volumeML: Int(metrics.volumeML))
+    }
+
+    var methodLabels: [String] {
+        (preparationMethods ?? []).map(\.label)
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case name
+        case category
+        case brand
+        case brandCollection = "brand_collection"
+        case tags
+        case heroFlavor = "hero_flavor"
+        case preparationMethods = "preparation_methods"
+        case brewRecipe = "brew_recipe"
+        case metrics
+        case servingOptions = "serving_options"
     }
 }
 
@@ -84,6 +245,8 @@ struct DrinkLogEntry: Identifiable, Codable, Hashable, Sendable {
     var drinkDefinitionID: String?
     var drinkName: String
     var category: String
+    var brand: String?
+    var preparationMethod: BrewMethod?
     var consumedAt: Date
     var servingLabel: String
     var metrics: IngredientMetrics
@@ -98,6 +261,8 @@ struct DrinkLogEntry: Identifiable, Codable, Hashable, Sendable {
         drinkDefinitionID: String? = nil,
         drinkName: String,
         category: String,
+        brand: String? = nil,
+        preparationMethod: BrewMethod? = nil,
         consumedAt: Date,
         servingLabel: String,
         metrics: IngredientMetrics,
@@ -111,6 +276,8 @@ struct DrinkLogEntry: Identifiable, Codable, Hashable, Sendable {
         self.drinkDefinitionID = drinkDefinitionID
         self.drinkName = drinkName
         self.category = category
+        self.brand = brand
+        self.preparationMethod = preparationMethod
         self.consumedAt = consumedAt
         self.servingLabel = servingLabel
         self.metrics = metrics
@@ -123,6 +290,23 @@ struct DrinkLogEntry: Identifiable, Codable, Hashable, Sendable {
     var isPendingSync: Bool {
         syncStatus != .synced
     }
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case userID = "user_id"
+        case drinkDefinitionID = "drink_definition_id"
+        case drinkName = "drink_name"
+        case category
+        case brand
+        case preparationMethod = "preparation_method"
+        case consumedAt = "consumed_at"
+        case servingLabel = "serving_label"
+        case metrics
+        case note
+        case source
+        case version
+        case syncStatus = "sync_status"
+    }
 }
 
 struct RecommendationExplanation: Codable, Hashable, Sendable {
@@ -132,6 +316,15 @@ struct RecommendationExplanation: Codable, Hashable, Sendable {
     var thresholdComparison: String
     var action: String
     var risk: String
+
+    enum CodingKeys: String, CodingKey {
+        case ruleID = "rule_id"
+        case trigger
+        case inputs
+        case thresholdComparison = "threshold_comparison"
+        case action
+        case risk
+    }
 }
 
 struct RecommendationCard: Identifiable, Codable, Hashable, Sendable {
@@ -148,6 +341,13 @@ struct HealthGoalsSummary: Codable, Hashable, Sendable {
     var sugarLimitG: Double
     var caloriesLimitKcal: Double
     var hydrationGoalML: Double
+
+    enum CodingKeys: String, CodingKey {
+        case caffeineLimitMG = "caffeine_limit_mg"
+        case sugarLimitG = "sugar_limit_g"
+        case caloriesLimitKcal = "calories_limit_kcal"
+        case hydrationGoalML = "hydration_goal_ml"
+    }
 }
 
 struct UserProfileSummary: Codable, Hashable, Sendable {
@@ -164,6 +364,12 @@ struct CategoryBreakdownSummary: Identifiable, Codable, Hashable, Sendable {
     var category: String
     var entriesCount: Int
     var hydrationML: Double
+
+    enum CodingKeys: String, CodingKey {
+        case category
+        case entriesCount = "entries_count"
+        case hydrationML = "hydration_ml"
+    }
 }
 
 struct DailyAggregateSnapshot: Codable, Hashable, Sendable {
@@ -171,6 +377,13 @@ struct DailyAggregateSnapshot: Codable, Hashable, Sendable {
     var totals: IngredientMetrics
     var entriesCount: Int
     var categoryBreakdown: [CategoryBreakdownSummary]
+
+    enum CodingKeys: String, CodingKey {
+        case date
+        case totals
+        case entriesCount = "entries_count"
+        case categoryBreakdown = "category_breakdown"
+    }
 }
 
 struct SyncEnvelopeSummary: Codable, Hashable, Sendable {
@@ -180,6 +393,12 @@ struct SyncEnvelopeSummary: Codable, Hashable, Sendable {
 
     var pendingCount: Int {
         pendingEntryIDs.count
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case lastSyncedAt = "last_synced_at"
+        case pendingEntryIDs = "pending_entry_ids"
+        case conflictCount = "conflict_count"
     }
 }
 
@@ -195,6 +414,16 @@ struct AppSession: Codable, Hashable, Sendable {
     var isExpired: Bool {
         issuedAt.addingTimeInterval(TimeInterval(expiresIn)) < .now
     }
+
+    enum CodingKeys: String, CodingKey {
+        case accessToken = "access_token"
+        case tokenType = "token_type"
+        case expiresIn = "expires_in"
+        case userID = "user_id"
+        case displayName = "display_name"
+        case sync
+        case issuedAt
+    }
 }
 
 struct CreateDrinkLogInput: Codable, Hashable, Sendable {
@@ -204,6 +433,15 @@ struct CreateDrinkLogInput: Codable, Hashable, Sendable {
     var consumedAt: Date
     var note: String?
     var source: DrinkLogSource
+
+    enum CodingKeys: String, CodingKey {
+        case drinkDefinitionID = "drink_definition_id"
+        case servingOptionID = "serving_option_id"
+        case ratio
+        case consumedAt = "consumed_at"
+        case note
+        case source
+    }
 }
 
 struct DashboardState: Sendable {
@@ -259,8 +497,25 @@ enum PreviewFixtures {
             id: "latte-oat",
             name: "燕麦拿铁",
             category: "咖啡",
-            brand: "饮知精选",
-            tags: ["办公", "早餐"],
+            brand: "MANNER",
+            brandCollection: "城市咖啡",
+            tags: ["办公", "早餐", "意式机"],
+            heroFlavor: "燕麦坚果",
+            preparationMethods: [.espressoMachine, .readyToDrink],
+            brewRecipe: BrewRecipeSummary(
+                method: .espressoMachine,
+                title: "双份意式燕麦拿铁",
+                ratioText: "18g 粉 -> 36g 浓缩",
+                coffeeG: 18,
+                waterML: 0,
+                outputML: 320,
+                milkML: 230,
+                concentrateML: 36,
+                brewSeconds: 30,
+                temperatureC: 93,
+                grindText: "意式细研磨",
+                tastingNote: "顺滑、坚果、适合通勤"
+            ),
             metrics: IngredientMetrics(caffeineMG: 120, sugarG: 7, caloriesKcal: 145, hydrationML: 260, volumeML: 320),
             servingOptions: [.init(id: "regular", name: "标准杯", volumeML: 320, multiplier: 1.0)]
         ),
@@ -268,8 +523,11 @@ enum PreviewFixtures {
             id: "jasmine-milk-tea",
             name: "茉莉奶绿",
             category: "奶茶",
-            brand: "饮知精选",
-            tags: ["下午茶", "高糖"],
+            brand: "霸王茶姬",
+            brandCollection: "东方茶饮",
+            tags: ["下午茶", "高糖", "品牌款"],
+            heroFlavor: "茉莉鲜奶",
+            preparationMethods: [.milkTea, .readyToDrink],
             metrics: IngredientMetrics(caffeineMG: 55, sugarG: 28, caloriesKcal: 265, hydrationML: 480, volumeML: 500),
             servingOptions: [.init(id: "half-sugar", name: "半糖", volumeML: 500, multiplier: 0.78)]
         ),
@@ -277,8 +535,11 @@ enum PreviewFixtures {
             id: "sparkling-water",
             name: "青柠气泡水",
             category: "气泡饮",
-            brand: "饮知精选",
-            tags: ["低糖", "补水"],
+            brand: "元气森林",
+            brandCollection: "轻负担补水",
+            tags: ["低糖", "补水", "即饮"],
+            heroFlavor: "青柠清爽",
+            preparationMethods: [.sparkling, .readyToDrink],
             metrics: IngredientMetrics(caffeineMG: 0, sugarG: 1, caloriesKcal: 12, hydrationML: 330, volumeML: 330),
             servingOptions: [.init(id: "can", name: "一听", volumeML: 330, multiplier: 1.0)]
         ),
@@ -286,10 +547,39 @@ enum PreviewFixtures {
             id: "energy-shot",
             name: "能量饮料",
             category: "功能饮料",
-            brand: "饮知精选",
-            tags: ["加班", "高咖啡因"],
+            brand: "东鹏特饮",
+            brandCollection: "高刺激补能",
+            tags: ["加班", "高咖啡因", "即饮"],
+            heroFlavor: "高刺激提神",
+            preparationMethods: [.readyToDrink],
             metrics: IngredientMetrics(caffeineMG: 180, sugarG: 24, caloriesKcal: 165, hydrationML: 250, volumeML: 250),
             servingOptions: [.init(id: "bottle", name: "标准瓶", volumeML: 250, multiplier: 1.0)]
+        ),
+        DrinkDefinitionSummary(
+            id: "pour-over-yirgacheffe",
+            name: "耶加雪菲手冲",
+            category: "手冲咖啡",
+            brand: "Blue Bottle",
+            brandCollection: "精品咖啡",
+            tags: ["手冲", "果酸", "单品"],
+            heroFlavor: "花香柑橘",
+            preparationMethods: [.handBrew],
+            brewRecipe: BrewRecipeSummary(
+                method: .handBrew,
+                title: "V60 手冲参考",
+                ratioText: "1:16",
+                coffeeG: 18,
+                waterML: 300,
+                outputML: 260,
+                milkML: 0,
+                concentrateML: 0,
+                brewSeconds: 195,
+                temperatureC: 92,
+                grindText: "中细研磨",
+                tastingNote: "花香、柑橘、酸质明亮"
+            ),
+            metrics: IngredientMetrics(caffeineMG: 130, sugarG: 0, caloriesKcal: 6, hydrationML: 255, volumeML: 260),
+            servingOptions: [.init(id: "v60", name: "V60 一杯份", volumeML: 260, multiplier: 1.0)]
         ),
     ]
 
@@ -300,6 +590,8 @@ enum PreviewFixtures {
             drinkDefinitionID: "latte-oat",
             drinkName: "燕麦拿铁",
             category: "咖啡",
+            brand: "MANNER",
+            preparationMethod: .espressoMachine,
             consumedAt: .now.addingTimeInterval(-60 * 60 * 3),
             servingLabel: "标准杯",
             metrics: IngredientMetrics(caffeineMG: 120, sugarG: 7, caloriesKcal: 145, hydrationML: 260, volumeML: 320),
@@ -311,6 +603,8 @@ enum PreviewFixtures {
             drinkDefinitionID: "jasmine-milk-tea",
             drinkName: "茉莉奶绿",
             category: "奶茶",
+            brand: "霸王茶姬",
+            preparationMethod: .milkTea,
             consumedAt: .now.addingTimeInterval(-60 * 35),
             servingLabel: "半糖",
             metrics: IngredientMetrics(caffeineMG: 42.9, sugarG: 21.84, caloriesKcal: 206.7, hydrationML: 374.4, volumeML: 390),

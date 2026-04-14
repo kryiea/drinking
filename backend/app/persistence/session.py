@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Callable
 
-from sqlalchemy import Engine, create_engine
+from sqlalchemy import Engine, create_engine, inspect, text
 from sqlalchemy.engine import make_url
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
@@ -45,47 +45,94 @@ def make_session_factory(engine: Engine) -> sessionmaker[Session]:
 
 def init_database(engine: Engine) -> None:
     Base.metadata.create_all(bind=engine)
+    apply_schema_updates(engine)
+
+
+def apply_schema_updates(engine: Engine) -> None:
+    inspector = inspect(engine)
+
+    add_missing_columns(
+        engine,
+        inspector,
+        "drink_definitions",
+        {
+            "brand_collection": "VARCHAR(120)",
+            "hero_flavor": "VARCHAR(120)",
+            "preparation_methods": "JSON",
+            "brew_recipe": "JSON",
+            "featured_order": "INTEGER DEFAULT 0",
+        },
+    )
+    add_missing_columns(
+        engine,
+        inspector,
+        "drink_logs",
+        {
+            "brand": "VARCHAR(120)",
+            "preparation_method": "VARCHAR(40)",
+        },
+    )
+
+
+def add_missing_columns(
+    engine: Engine,
+    inspector,
+    table_name: str,
+    desired_columns: dict[str, str],
+) -> None:
+    if inspector.has_table(table_name) is False:
+        return
+
+    existing = {column["name"] for column in inspector.get_columns(table_name)}
+    with engine.begin() as connection:
+        for column_name, ddl in desired_columns.items():
+            if column_name in existing:
+                continue
+            connection.execute(text(f"ALTER TABLE {table_name} ADD COLUMN {column_name} {ddl}"))
 
 
 def seed_database(session: Session) -> None:
-    if session.query(DrinkDefinitionRow).count() == 0:
-        for definition in seed_drink_definitions():
-            definition_row = DrinkDefinitionRow(
-                id=definition.id,
-                name=definition.name,
-                category=definition.category,
-                brand=definition.brand,
-                tags=serialize_tags(definition.tags),
-                caffeine_mg=definition.metrics.caffeine_mg,
-                sugar_g=definition.metrics.sugar_g,
-                calories_kcal=definition.metrics.calories_kcal,
-                hydration_ml=definition.metrics.hydration_ml,
-                volume_ml=definition.metrics.volume_ml,
-                template_source=definition.template_source,
-            )
-            definition_row.serving_options = [
-                DrinkServingOptionRow(
-                    option_id=option.id,
-                    name=option.name,
-                    volume_ml=option.volume_ml,
-                    multiplier=option.multiplier,
-                    sort_order=index,
-                )
-                for index, option in enumerate(definition.serving_options)
-            ]
+    for index, definition in enumerate(seed_drink_definitions()):
+        definition_row = session.get(DrinkDefinitionRow, definition.id)
+        if definition_row is None:
+            definition_row = DrinkDefinitionRow(id=definition.id)
             session.add(definition_row)
 
-    if session.query(FeedbackItemRow).count() == 0:
-        for item in seed_feedback_items():
-            session.add(
-                FeedbackItemRow(
-                    id=item.id,
-                    user_id=item.user_id,
-                    category=item.category,
-                    content=item.content,
-                    status=item.status,
-                )
+        definition_row.name = definition.name
+        definition_row.category = definition.category
+        definition_row.brand = definition.brand
+        definition_row.brand_collection = definition.brand_collection
+        definition_row.tags = serialize_tags(definition.tags)
+        definition_row.hero_flavor = definition.hero_flavor
+        definition_row.preparation_methods = list(definition.preparation_methods)
+        definition_row.brew_recipe = definition.brew_recipe.model_dump() if definition.brew_recipe else None
+        definition_row.featured_order = index
+        definition_row.caffeine_mg = definition.metrics.caffeine_mg
+        definition_row.sugar_g = definition.metrics.sugar_g
+        definition_row.calories_kcal = definition.metrics.calories_kcal
+        definition_row.hydration_ml = definition.metrics.hydration_ml
+        definition_row.volume_ml = definition.metrics.volume_ml
+        definition_row.template_source = definition.template_source
+        definition_row.serving_options = [
+            DrinkServingOptionRow(
+                option_id=option.id,
+                name=option.name,
+                volume_ml=option.volume_ml,
+                multiplier=option.multiplier,
+                sort_order=option_index,
             )
+            for option_index, option in enumerate(definition.serving_options)
+        ]
+
+    for item in seed_feedback_items():
+        feedback_row = session.get(FeedbackItemRow, item.id)
+        if feedback_row is None:
+            feedback_row = FeedbackItemRow(id=item.id)
+            session.add(feedback_row)
+        feedback_row.user_id = item.user_id
+        feedback_row.category = item.category
+        feedback_row.content = item.content
+        feedback_row.status = item.status
 
     if session.query(RuleToggleRow).count() == 0:
         toggles = default_rule_toggles()

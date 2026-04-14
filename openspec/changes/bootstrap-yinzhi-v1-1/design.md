@@ -6,6 +6,8 @@
 - Development boots with SQLite + startup seed data so API work is not blocked by local middleware readiness.
 - The same repository seam is intended to switch to PostgreSQL by environment configuration rather than route rewrites.
 - Recommendation engine produces deterministic explanation objects from aggregated intake metrics.
+- Catalog definitions now carry brand, flavor, preparation methods, and brew recipe summaries so the same contract can power both search and brew-assist UI.
+- Admin surface includes a lightweight support console plus an OpenAI-compatible LLM adapter that can operate in fallback mode before secrets are configured.
 
 ## iOS
 - SwiftUI app shell with four tabs and a small design system.
@@ -15,8 +17,11 @@
 - Onboarding now supports Apple 登录入口、开发期直连后端入口与离线体验入口 three-path boot.
 - Home / Log / Insights / Profile screens read sync state from the shared environment instead of preview-only fixtures.
 - Shared pure Swift target for recommendation presentation and progress calculations.
+- Home emphasizes a compact "结论先行" layout instead of heavy explanatory copy.
+- Log expands into brand-aware quick entry plus a Brew Lab for hand brew and machine-style parameter estimation.
 
 ## Docs
 - Root rules in `AGENTS.md`
 - project map in `agent.md`
 - architecture/product/decision/quality docs under `docs/`
+- local environment docs describe Podman-only proxy bridging so VPN users can keep host networking untouched

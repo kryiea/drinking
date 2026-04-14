@@ -5,7 +5,7 @@
 
 ## 系统分层
 - `iOS App`: SwiftUI 客户端，负责界面、离线缓存、系统能力集成、Typed Client 与同步编排。
-- `Python API`: FastAPI 模块化单体，负责鉴权、饮品目录、饮品记录、洞察聚合、推荐决策、导出任务和内部管理接口。
+- `Python API`: FastAPI 模块化单体，负责鉴权、饮品目录、品牌与冲泡计算、饮品记录、洞察聚合、推荐决策、导出任务、LLM 接口适配和内部管理接口。
 - `Data/Admin`: PostgreSQL、Redis、对象存储与内部管理后台能力。当前仓库已将核心数据持久化到 SQLAlchemy 仓储层，开发期默认 SQLite，生产目标仍是 PostgreSQL。
 
 ## 真源策略
@@ -18,16 +18,25 @@
 - `/v1/profile`
 - `/v1/goals`
 - `/v1/drink-definitions`
+- `/v1/drink-definitions/brew-calculator`
 - `/v1/drink-logs`
 - `/v1/daily-insights`
 - `/v1/recommendations`
 - `/v1/exports`
 - `/v1/admin/*`
+- `/support`
+
+## 饮品与建议能力
+- 饮品目录以品牌化定义为主，支持 `brandCollection`、风味标签、冲泡方法和默认配方摘要。
+- 记录模型已预留 `brand` 与 `preparationMethod` 字段，便于后续接入更细的分析和个性化阈值。
+- 冲泡计算首版提供 hand brew / espresso-machine 风格的参数计算，便于记录页直接给出克数、出液量和预估咖啡因。
+- LLM 能力当前定位为 support 平台的开发者联调入口，严格走 OpenAI 兼容接口，不直接进入用户开放聊天路径。
 
 ## iOS 体验边界
 - 首页、记录、分析、我的四个顶级区块。
 - Liquid Glass 仅应用于导航条、关键卡片、主 CTA、状态 chips 和弹出层。
 - iOS 26+ 使用系统玻璃 API；iOS 17-25 使用 `ultraThinMaterial` fallback。
+- 首页强调「结论先行」和更轻的信息密度；记录页扩展为品牌筛选、冲泡实验区和更强的快捷录入体验。
 
 ## 后续演进
 - 将当前 SQLAlchemy 持久化从 SQLite 开发库切换到 PostgreSQL 实例，并补 Alembic 迁移。

@@ -5,6 +5,15 @@ from typing import Dict, List, Literal, Optional, Union
 
 from pydantic import BaseModel, Field
 
+PreparationMethod = Literal[
+    "hand-brew",
+    "espresso-machine",
+    "milk-tea",
+    "sparkling",
+    "ready-to-drink",
+]
+BrewStrength = Literal["light", "balanced", "bold"]
+
 
 class IngredientMetrics(BaseModel):
     caffeine_mg: float = 0
@@ -39,12 +48,31 @@ class DrinkServingOption(BaseModel):
     multiplier: float = 1.0
 
 
+class BrewRecipe(BaseModel):
+    method: PreparationMethod
+    title: str
+    ratio_text: str
+    coffee_g: float = 0
+    water_ml: float = 0
+    output_ml: float = 0
+    milk_ml: float = 0
+    concentrate_ml: float = 0
+    brew_seconds: int = 0
+    temperature_c: int = 0
+    grind_text: Optional[str] = None
+    tasting_note: Optional[str] = None
+
+
 class DrinkDefinition(BaseModel):
     id: str
     name: str
     category: str
     brand: str
+    brand_collection: Optional[str] = None
     tags: List[str] = Field(default_factory=list)
+    hero_flavor: Optional[str] = None
+    preparation_methods: List[PreparationMethod] = Field(default_factory=list)
+    brew_recipe: Optional[BrewRecipe] = None
     metrics: IngredientMetrics
     serving_options: List[DrinkServingOption] = Field(default_factory=list)
     template_source: Literal["seed", "user", "partner"] = "seed"
@@ -71,6 +99,8 @@ class DrinkLogEntry(BaseModel):
     drink_definition_id: str
     drink_name: str
     category: str
+    brand: Optional[str] = None
+    preparation_method: Optional[PreparationMethod] = None
     consumed_at: datetime
     serving_label: str
     metrics: IngredientMetrics
@@ -161,6 +191,28 @@ class ExportTask(BaseModel):
     download_url: Optional[str] = None
 
 
+class BrewCalculatorRequest(BaseModel):
+    drink_definition_id: str
+    target_volume_ml: int = Field(default=320, ge=60, le=1000)
+    strength: BrewStrength = "balanced"
+
+
+class BrewCalculatorResult(BaseModel):
+    drink_definition_id: str
+    drink_name: str
+    brand: str
+    method: PreparationMethod
+    target_volume_ml: int
+    coffee_g: float
+    water_ml: float
+    output_ml: float
+    milk_ml: float = 0
+    concentrate_ml: float = 0
+    brew_ratio: str
+    summary: str
+    tasting_note: Optional[str] = None
+
+
 class RuleToggles(BaseModel):
     caffeine_warning_ratio: float = 0.8
     sugar_warning_ratio: float = 0.8
@@ -180,5 +232,42 @@ class FeedbackItem(BaseModel):
 
 class AdminSnapshot(BaseModel):
     drink_count: int
+    brand_count: int = 0
     rule_toggles: RuleToggles
     pending_feedback: int
+
+
+class ServiceStatus(BaseModel):
+    name: str
+    target: str
+    state: Literal["ready", "configured", "disabled"]
+    detail: str
+
+
+class LLMProviderStatus(BaseModel):
+    configured: bool
+    provider: str
+    base_url: Optional[str] = None
+    model: Optional[str] = None
+    mode: Literal["ready", "not-configured"] = "not-configured"
+
+
+class SupportPlatformSnapshot(BaseModel):
+    admin: AdminSnapshot
+    llm: LLMProviderStatus
+    services: List[ServiceStatus] = Field(default_factory=list)
+    recent_feedback: List[FeedbackItem] = Field(default_factory=list)
+
+
+class LLMPreviewRequest(BaseModel):
+    prompt: str = Field(min_length=1, max_length=2000)
+    system_prompt: Optional[str] = "你是饮知开发期的运营支持助手，请用简洁、专业、可执行的中文回答。"
+    temperature: Optional[float] = Field(default=None, ge=0, le=1.5)
+
+
+class LLMPreviewResponse(BaseModel):
+    configured: bool
+    provider: str
+    model: Optional[str] = None
+    mode: Literal["live", "fallback"] = "fallback"
+    output: str

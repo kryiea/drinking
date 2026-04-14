@@ -117,6 +117,7 @@ final class AppEnvironment {
                 identityToken: identityToken,
                 deviceName: config.deviceName
             )
+            errorMessage = nil
             self.session = session
             defaults.set(true, forKey: AppPersistenceKeys.onboardingCompleted)
             hasCompletedOnboarding = true
@@ -145,6 +146,7 @@ final class AppEnvironment {
 
             do {
                 catalog = try await api.catalog.search(query: query)
+                errorMessage = nil
                 return
             } catch {
                 errorMessage = "饮品目录暂时无法刷新：\(error.localizedDescription)"
@@ -265,6 +267,7 @@ final class AppEnvironment {
                 categoryBreakdown: aggregate.categoryBreakdown
             )
 
+            errorMessage = nil
             await updateSessionSyncState(lastSyncedAt: .now)
             statusMessage = pendingSyncCount == 0
                 ? "已连接服务端真源，今日数据已刷新。"

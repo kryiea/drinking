@@ -10,6 +10,9 @@ from sqlalchemy.orm import Session, joinedload
 from app.domain.models import (
     AdminSnapshot,
     AppleAuthRequest,
+    BrewCalculatorRequest,
+    BrewCalculatorResult,
+    BrewRecipe,
     DrinkDefinition,
     DrinkLogCreateRequest,
     DrinkLogEntry,
@@ -130,14 +133,26 @@ class SQLAlchemyRepository(AppRepository):
         self.session.refresh(row)
         return _goals_row_to_model(row)
 
-    def search_drink_definitions(self, query: str = "", category: Optional[str] = None) -> List[DrinkDefinition]:
+    def search_drink_definitions(
+        self,
+        query: str = "",
+        category: Optional[str] = None,
+        brand: Optional[str] = None,
+        preparation_method: Optional[str] = None,
+    ) -> List[DrinkDefinition]:
         statement = (
             select(DrinkDefinitionRow)
             .options(joinedload(DrinkDefinitionRow.serving_options))
-            .order_by(DrinkDefinitionRow.category.asc(), DrinkDefinitionRow.name.asc())
+            .order_by(DrinkDefinitionRow.featured_order.asc(), DrinkDefinitionRow.category.asc(), DrinkDefinitionRow.name.asc())
         )
         if category:
             statement = statement.where(DrinkDefinitionRow.category == category)
+        if brand:
+            statement = statement.where(func.lower(DrinkDefinitionRow.brand) == brand.lower())
+        if preparation_method:
+            statement = statement.where(
+                func.lower(cast(DrinkDefinitionRow.preparation_methods, String)).like(f"%{preparation_method.lower()}%")
+            )
 
         normalized = query.lower().strip()
         if normalized:
@@ -146,8 +161,10 @@ class SQLAlchemyRepository(AppRepository):
                 or_(
                     func.lower(DrinkDefinitionRow.name).like(like_pattern),
                     func.lower(DrinkDefinitionRow.brand).like(like_pattern),
+                    func.lower(func.coalesce(DrinkDefinitionRow.brand_collection, "")).like(like_pattern),
                     func.lower(DrinkDefinitionRow.category).like(like_pattern),
                     func.lower(cast(DrinkDefinitionRow.tags, String)).like(like_pattern),
+                    func.lower(func.coalesce(DrinkDefinitionRow.hero_flavor, "")).like(like_pattern),
                 )
             )
 
@@ -162,6 +179,46 @@ class SQLAlchemyRepository(AppRepository):
         )
         row = self.session.execute(statement).unique().scalar_one()
         return _definition_row_to_model(row)
+
+    def estimate_brew(self, payload: BrewCalculatorRequest) -> BrewCalculatorResult:
+        definition = self.get_drink_definition(payload.drink_definition_id)
+        recipe = definition.brew_recipe or _fallback_recipe_for(definition)
+
+        base_output = recipe.output_ml or max(definition.metrics.volume_ml, 1)
+        scale = payload.target_volume_ml / max(base_output, 1)
+        strength_factor = {"light": 0.92, "balanced": 1.0, "bold": 1.08}[payload.strength]
+
+        coffee_g = round(recipe.coffee_g * scale * strength_factor, 1)
+        water_ml = round(recipe.water_ml * scale, 1)
+        concentrate_ml = round(recipe.concentrate_ml * scale * strength_factor, 1)
+        milk_ml = round(recipe.milk_ml * scale, 1)
+        output_ml = float(payload.target_volume_ml)
+
+        summary_parts = [f"{recipe.title} · {payload.target_volume_ml}ml"]
+        if coffee_g > 0:
+            summary_parts.append(f"咖啡粉 {coffee_g:g}g")
+        if water_ml > 0:
+            summary_parts.append(f"热水 {water_ml:g}ml")
+        if concentrate_ml > 0:
+            summary_parts.append(f"浓缩 {concentrate_ml:g}ml")
+        if milk_ml > 0:
+            summary_parts.append(f"奶基底 {milk_ml:g}ml")
+
+        return BrewCalculatorResult(
+            drink_definition_id=definition.id,
+            drink_name=definition.name,
+            brand=definition.brand,
+            method=recipe.method,
+            target_volume_ml=payload.target_volume_ml,
+            coffee_g=coffee_g,
+            water_ml=water_ml,
+            output_ml=output_ml,
+            milk_ml=milk_ml,
+            concentrate_ml=concentrate_ml,
+            brew_ratio=recipe.ratio_text,
+            summary="，".join(summary_parts),
+            tasting_note=recipe.tasting_note,
+        )
 
     def create_log(self, user_id: str, payload: DrinkLogCreateRequest) -> DrinkLogEntry:
         definition_row = self._get_definition_row(payload.drink_definition_id)
@@ -182,6 +239,8 @@ class SQLAlchemyRepository(AppRepository):
             serving_option_id=serving_row.option_id,
             drink_name=definition_row.name,
             category=definition_row.category,
+            brand=definition_row.brand,
+            preparation_method=ensure_list(definition_row.preparation_methods)[0] if definition_row.preparation_methods else None,
             consumed_at=payload.consumed_at,
             serving_label=serving_row.name,
             caffeine_mg=metrics.caffeine_mg,
@@ -277,11 +336,13 @@ class SQLAlchemyRepository(AppRepository):
 
     def get_admin_snapshot(self) -> AdminSnapshot:
         drink_count = self.session.scalar(select(func.count()).select_from(DrinkDefinitionRow)) or 0
+        brand_count = self.session.scalar(select(func.count(func.distinct(DrinkDefinitionRow.brand)))) or 0
         pending_feedback = self.session.scalar(
             select(func.count()).select_from(FeedbackItemRow).where(FeedbackItemRow.status == "new")
         ) or 0
         return AdminSnapshot(
             drink_count=int(drink_count),
+            brand_count=int(brand_count),
             rule_toggles=self.rule_toggles,
             pending_feedback=int(pending_feedback),
         )
@@ -290,6 +351,15 @@ class SQLAlchemyRepository(AppRepository):
         statement = select(FeedbackItemRow).order_by(FeedbackItemRow.id.asc())
         rows = self.session.execute(statement).scalars().all()
         return [_feedback_row_to_model(row) for row in rows]
+
+    def mark_feedback_reviewed(self, feedback_id: str) -> FeedbackItem:
+        row = self.session.get(FeedbackItemRow, feedback_id)
+        if row is None:
+            raise KeyError(feedback_id)
+        row.status = "reviewed"
+        self.session.commit()
+        self.session.refresh(row)
+        return _feedback_row_to_model(row)
 
     def update_rule_toggles(self, toggles: RuleToggles) -> RuleToggles:
         row = self.session.get(RuleToggleRow, "default")
@@ -331,7 +401,11 @@ def _definition_row_to_model(row: DrinkDefinitionRow) -> DrinkDefinition:
         name=row.name,
         category=row.category,
         brand=row.brand,
+        brand_collection=row.brand_collection,
         tags=ensure_list(row.tags),
+        hero_flavor=row.hero_flavor,
+        preparation_methods=ensure_list(row.preparation_methods),
+        brew_recipe=_recipe_row_to_model(row.brew_recipe),
         metrics=IngredientMetrics(
             caffeine_mg=row.caffeine_mg,
             sugar_g=row.sugar_g,
@@ -359,6 +433,8 @@ def _log_row_to_model(row: DrinkLogRow) -> DrinkLogEntry:
         drink_definition_id=row.drink_definition_id,
         drink_name=row.drink_name,
         category=row.category,
+        brand=row.brand,
+        preparation_method=row.preparation_method,
         consumed_at=row.consumed_at,
         serving_label=row.serving_label,
         metrics=IngredientMetrics(
@@ -413,4 +489,54 @@ def _rule_row_to_model(row: RuleToggleRow) -> RuleToggles:
         sugar_warning_ratio=row.sugar_warning_ratio,
         late_caffeine_hour=row.late_caffeine_hour,
         enabled_rules=ensure_list(row.enabled_rules),
+    )
+
+
+def _recipe_row_to_model(payload: Optional[dict]) -> Optional[BrewRecipe]:
+    if isinstance(payload, dict) is False:
+        return None
+    return BrewRecipe.model_validate(payload)
+
+
+def _fallback_recipe_for(definition: DrinkDefinition) -> BrewRecipe:
+    methods = definition.preparation_methods or ["ready-to-drink"]
+    method = methods[0]
+    base_volume = definition.metrics.volume_ml or 300
+
+    if method == "hand-brew":
+        return BrewRecipe(
+            method="hand-brew",
+            title=f"{definition.name} 手冲参考",
+            ratio_text="1:16",
+            coffee_g=base_volume / 16,
+            water_ml=base_volume * 1.15,
+            output_ml=base_volume,
+            brew_seconds=180,
+            temperature_c=92,
+            grind_text="中细研磨",
+            tasting_note=definition.hero_flavor,
+        )
+
+    if method == "espresso-machine":
+        return BrewRecipe(
+            method="espresso-machine",
+            title=f"{definition.name} 意式机参考",
+            ratio_text="18g 粉 -> 36g 浓缩",
+            coffee_g=18,
+            water_ml=max(base_volume - 36, 0),
+            output_ml=base_volume,
+            concentrate_ml=36,
+            milk_ml=max(base_volume - 90, 0),
+            brew_seconds=30,
+            temperature_c=93,
+            grind_text="意式细研磨",
+            tasting_note=definition.hero_flavor,
+        )
+
+    return BrewRecipe(
+        method=method,
+        title=f"{definition.name} 标准配方",
+        ratio_text="成品即饮",
+        output_ml=base_volume,
+        tasting_note=definition.hero_flavor,
     )

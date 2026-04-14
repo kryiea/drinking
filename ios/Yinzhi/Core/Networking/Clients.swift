@@ -35,6 +35,7 @@ enum APIClientError: LocalizedError, Sendable {
     case malformedBaseURL
     case missingSession
     case invalidResponse
+    case decoding(message: String)
     case server(statusCode: Int, message: String)
 
     var errorDescription: String? {
@@ -47,6 +48,8 @@ enum APIClientError: LocalizedError, Sendable {
             return "当前还没有可用登录会话，请先完成登录。"
         case .invalidResponse:
             return "服务端返回了无法识别的数据。"
+        case let .decoding(message):
+            return "服务端数据解码失败：\(message)"
         case let .server(statusCode, message):
             return "服务端错误（\(statusCode)）：\(message)"
         }
@@ -127,7 +130,7 @@ private struct HTTPTransport: Sendable {
         query: [URLQueryItem] = [],
         requiresAuth: Bool = true
     ) async throws -> Response {
-        let encoder = makeEncoder()
+        let encoder = APICodingFactory.makeEncoder()
         let bodyData = try encoder.encode(body)
         let request = try await makeRequest(
             path: path,
@@ -199,13 +202,17 @@ private struct HTTPTransport: Sendable {
             )
         }
 
-        let decoder = makeDecoder()
-        return try decoder.decode(Response.self, from: data)
+        let decoder = APICodingFactory.makeDecoder()
+
+        do {
+            return try decoder.decode(Response.self, from: data)
+        } catch let error as DecodingError {
+            throw APIClientError.decoding(message: describe(error))
+        }
     }
 
     private func serverMessage(from data: Data) -> String? {
         let decoder = JSONDecoder()
-        decoder.keyDecodingStrategy = .convertFromSnakeCase
 
         if let payload = try? decoder.decode(ServerErrorPayload.self, from: data) {
             return payload.detail
@@ -213,6 +220,29 @@ private struct HTTPTransport: Sendable {
 
         return String(data: data, encoding: .utf8)
     }
+}
+
+private func describe(_ error: DecodingError) -> String {
+    switch error {
+    case let .keyNotFound(key, context):
+        return "缺少字段 \(codingPathDescription(context.codingPath + [key]))"
+    case let .typeMismatch(_, context):
+        return "类型不匹配 \(codingPathDescription(context.codingPath)): \(context.debugDescription)"
+    case let .valueNotFound(_, context):
+        return "字段为空 \(codingPathDescription(context.codingPath)): \(context.debugDescription)"
+    case let .dataCorrupted(context):
+        return "数据损坏 \(codingPathDescription(context.codingPath)): \(context.debugDescription)"
+    @unknown default:
+        return "未知解码错误"
+    }
+}
+
+private func codingPathDescription(_ path: [CodingKey]) -> String {
+    guard path.isEmpty == false else {
+        return "<root>"
+    }
+
+    return path.map(\.stringValue).joined(separator: ".")
 }
 
 private struct LiveAuthClient: AuthClient {
@@ -355,6 +385,8 @@ struct PreviewDrinkLogClient: DrinkLogClient {
             drinkDefinitionID: definition.id,
             drinkName: definition.name,
             category: definition.category,
+            brand: definition.brand,
+            preparationMethod: definition.preparationMethods?.first,
             consumedAt: input.consumedAt,
             servingLabel: serving.name,
             metrics: scaledMetrics,
@@ -401,12 +433,23 @@ struct PreviewExportClient: ExportClient {
 private struct AppleAuthPayload: Encodable {
     let identityToken: String
     let deviceName: String
+
+    enum CodingKeys: String, CodingKey {
+        case identityToken = "identity_token"
+        case deviceName = "device_name"
+    }
 }
 
 private struct ExportRequestPayload: Encodable {
     let format: String
     let startDate: String
     let endDate: String
+
+    enum CodingKeys: String, CodingKey {
+        case format
+        case startDate = "start_date"
+        case endDate = "end_date"
+    }
 }
 
 private struct ExportTaskDTO: Decodable {
@@ -414,6 +457,13 @@ private struct ExportTaskDTO: Decodable {
     let status: String
     let format: String
     let downloadURL: String?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case status
+        case format
+        case downloadURL = "download_url"
+    }
 }
 
 private struct SessionResponseDTO: Decodable {
@@ -435,6 +485,15 @@ private struct SessionResponseDTO: Decodable {
             issuedAt: .now
         )
     }
+
+    enum CodingKeys: String, CodingKey {
+        case accessToken = "access_token"
+        case tokenType = "token_type"
+        case expiresIn = "expires_in"
+        case userID = "user_id"
+        case displayName = "display_name"
+        case sync
+    }
 }
 
 private struct UserProfileDTO: Decodable {
@@ -454,6 +513,15 @@ private struct UserProfileDTO: Decodable {
             caffeineSensitive: caffeineSensitive,
             bloodSugarWatch: bloodSugarWatch
         )
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case userID = "user_id"
+        case displayName = "display_name"
+        case age
+        case sleepTime = "sleep_time"
+        case caffeineSensitive = "caffeine_sensitive"
+        case bloodSugarWatch = "blood_sugar_watch"
     }
 }
 
@@ -492,6 +560,15 @@ private struct RecommendationExplanationDTO: Decodable {
             risk: risk
         )
     }
+
+    enum CodingKeys: String, CodingKey {
+        case ruleID = "rule_id"
+        case trigger
+        case inputs
+        case thresholdComparison = "threshold_comparison"
+        case action
+        case risk
+    }
 }
 
 private enum RecommendationInputValue: Decodable {
@@ -522,32 +599,34 @@ private struct ServerErrorPayload: Decodable {
     let detail: String
 }
 
-private func makeEncoder() -> JSONEncoder {
-    let encoder = JSONEncoder()
-    encoder.keyEncodingStrategy = .convertToSnakeCase
-    encoder.dateEncodingStrategy = .custom { date, encoder in
-        var container = encoder.singleValueContainer()
-        try container.encode(makeISO8601Formatter().string(from: date))
-    }
-    return encoder
-}
-
-private func makeDecoder() -> JSONDecoder {
-    let decoder = JSONDecoder()
-    decoder.keyDecodingStrategy = .convertFromSnakeCase
-    decoder.dateDecodingStrategy = .custom { decoder in
-        let container = try decoder.singleValueContainer()
-        let value = try container.decode(String.self)
-
-        if let date = makeISO8601Formatter().date(from: value)
-            ?? makeISO8601FractionalFormatter().date(from: value)
-            ?? makePlainDateFormatter().date(from: value) {
-            return date
+enum APICodingFactory {
+    static func makeEncoder() -> JSONEncoder {
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .custom { date, encoder in
+            var container = encoder.singleValueContainer()
+            try container.encode(makeISO8601Formatter().string(from: date))
         }
-
-        throw DecodingError.dataCorruptedError(in: container, debugDescription: "Unsupported date value: \(value)")
+        return encoder
     }
-    return decoder
+
+    static func makeDecoder() -> JSONDecoder {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .custom { decoder in
+            let container = try decoder.singleValueContainer()
+            let value = try container.decode(String.self)
+
+            if let date = makeISO8601Formatter().date(from: value)
+                ?? makeISO8601FractionalFormatter().date(from: value)
+                ?? makeNaiveDateTimeFormatter().date(from: value)
+                ?? makeNaiveFractionalDateTimeFormatter().date(from: value)
+                ?? makePlainDateFormatter().date(from: value) {
+                return date
+            }
+
+            throw DecodingError.dataCorruptedError(in: container, debugDescription: "Unsupported date value: \(value)")
+        }
+        return decoder
+    }
 }
 
 private func formatDay(_ date: Date) -> String {
@@ -565,6 +644,24 @@ private func makeISO8601FractionalFormatter() -> ISO8601DateFormatter {
     let formatter = ISO8601DateFormatter()
     formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
     formatter.timeZone = .current
+    return formatter
+}
+
+private func makeNaiveDateTimeFormatter() -> DateFormatter {
+    let formatter = DateFormatter()
+    formatter.calendar = Calendar(identifier: .gregorian)
+    formatter.locale = Locale(identifier: "en_US_POSIX")
+    formatter.timeZone = .current
+    formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
+    return formatter
+}
+
+private func makeNaiveFractionalDateTimeFormatter() -> DateFormatter {
+    let formatter = DateFormatter()
+    formatter.calendar = Calendar(identifier: .gregorian)
+    formatter.locale = Locale(identifier: "en_US_POSIX")
+    formatter.timeZone = .current
+    formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSSSS"
     return formatter
 }
 

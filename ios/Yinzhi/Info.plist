@@ -18,6 +18,19 @@
 	<string>1.0</string>
 	<key>CFBundleVersion</key>
 	<string>1</string>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
+	<key>YINZHI_API_BASE_URL</key>
+	<string>http://127.0.0.1:8000</string>
+	<key>YINZHI_DEVELOPMENT_TOKEN_SEED</key>
+	<string>yinzhi-local-dev</string>
+	<key>YINZHI_DEVICE_NAME</key>
+	<string></string>
+	<key>YINZHI_ENABLE_PREVIEW_FALLBACK</key>
+	<true/>
 	<key>UILaunchScreen</key>
 	<dict/>
 </dict>
