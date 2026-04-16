@@ -16,6 +16,14 @@
 - 生成 iOS 工程: `./scripts/generate-ios-project.sh`
 - 安装完整 Xcode: `./scripts/install-xcode.sh`
 
+## 当前开发优先级
+- 当前产品主链路是本地优先，因此即使后端或中间件暂时不可用，也可以继续推进：
+  - iOS 页面
+  - 本地记录与设置
+  - 领域模型与确定性计算
+  - iCloud / `SyncProvider` 边界
+- Podman、后端与中间件当前主要用于目录、support/admin、导出和未来扩展能力联调。
+
 ## 本地基础设施
 - PostgreSQL: `127.0.0.1:5432`
 - Redis: `127.0.0.1:6379`
@@ -32,6 +40,9 @@
 - Support 平台: `http://127.0.0.1:8000/support`
 - 管理端 JSON 快照: `http://127.0.0.1:8000/v1/admin/support`
 - 一键开发启动: `./scripts/start-local-dev.sh`
+
+说明：
+- 这些入口当前属于“辅助远程能力”联调入口，不是主记录链路的必备条件。
 
 ## Podman 与 VPN
 - 仓库脚本不会修改 macOS 全局 VPN 或系统代理。

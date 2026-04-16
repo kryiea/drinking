@@ -76,6 +76,41 @@ def test_log_insights_and_recommendations_round_trip(client: TestClient) -> None
     )
 
 
+def test_caffeine_forecast_and_ai_brief_return_structured_insight(client: TestClient) -> None:
+    now = datetime.now().replace(microsecond=0)
+    response = client.post(
+        "/v1/drink-logs",
+        json={
+            "drink_definition_id": "latte-oat",
+            "consumed_at": now.isoformat(),
+            "ratio": 1.0,
+            "source": "catalog",
+        },
+        headers={"x-user-id": "demo-user"},
+    )
+    assert response.status_code == 201
+
+    forecast = client.get(
+        "/v1/daily-insights/caffeine-forecast",
+        headers={"x-user-id": "demo-user"},
+    )
+    assert forecast.status_code == 200
+    forecast_payload = forecast.json()
+    assert forecast_payload["current_estimate_mg"] > 0
+    assert forecast_payload["sleep_readiness"] in {"sleep-friendly", "watch", "likely-disruptive"}
+    assert len(forecast_payload["timeline"]) >= 3
+
+    ai_brief = client.get(
+        "/v1/daily-insights/ai-brief",
+        headers={"x-user-id": "demo-user"},
+    )
+    assert ai_brief.status_code == 200
+    ai_payload = ai_brief.json()
+    assert ai_payload["mode"] == "fallback"
+    assert ai_payload["headline"]
+    assert ai_payload["next_actions"]
+
+
 def test_auth_exchange_returns_session(client: TestClient) -> None:
     response = client.post(
         "/v1/auth/apple",

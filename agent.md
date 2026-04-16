@@ -1,60 +1,99 @@
 # 饮知项目地图
 
-## 当前阶段
-- 阶段: 本地联调链路与品牌化记录体验完成，进入鉴权、中间件收口与体验精修阶段
-- 目标: 在前后端本地可运行的前提下，继续把服务端真源、支持平台、LLM 接入和更细的饮品场景做实，同时把首页和开发者后台磨到可持续演进
-- 状态: FastAPI 合同、SwiftUI App Shell、实时 typed clients、会话持久化、SwiftData 离线缓存和补同步路径已落地；后端已切到 SQLAlchemy 仓储，开发默认 SQLite、生产目标 PostgreSQL；support 页面、品牌目录、冲泡计算、OpenAI 兼容 LLM 适配和 `xcodebuild` 编译验证已完成，首页现已升级为“结论先行 + 下一步动作”结构，support 平台已升级为带预设提示词、原始 JSON 和服务状态的开发控制台，Podman 中间件通过 Podman VM 代理桥接继续收口
+## 当前结论
+- 产品主线：`随手记录咖啡 / 奶茶 -> 计算当前咖啡因与入睡残留 -> 帮用户理解自己的节奏`
+- 架构主线：`本地优先、后端辅助`
+- 当前状态：首页、记录、分析、我的已经收敛到离线优先的最小体验；本地记录、确定性咖啡因计算、个人设置、个人饮品模板和 `SyncProvider + iCloud` 缝已落地
 
-## 产品焦点
-- 核心闭环: 饮品记录 -> 健康解释 -> 行为建议
-- V1 范围: 首页、记录、分析、我的四个一级入口；Apple 登录；可解释建议；离线缓存；服务端真源
-- 暂缓项: 社区、专家咨询、订阅付费、开放 API、聊天式 AI、条码/语音/图像识别
+## 当前真源
+- 架构：`docs/decisions/ADR-0003-local-first-architecture.md`
+- 系统总览：`docs/architecture/system-overview.md`
+- 产品范围：`docs/product/v1-scope.md`
+- 质量要求：`docs/quality/verification-matrix.md`
+- 文档导航：`docs/README.md`
+- 变更导航：`openspec/README.md`
 
 ## 模块地图
-- 后端入口: `backend/app/main.py`
-- API 路由: `backend/app/api/routes/`
-- 领域模型与仓储: `backend/app/domain/`
-- 建议引擎: `backend/app/services/recommendations.py`
-- LLM 适配层: `backend/app/services/llm.py`
-- iOS App 入口: `ios/Yinzhi/App/YinzhiApp.swift`
-- iOS 设计系统: `ios/Yinzhi/Core/Design/`
-- iOS Typed Clients: `ios/Yinzhi/Core/Networking/`
-- 共享 Swift 领域逻辑: `Sources/YinzhiCore/`
+- iOS App 入口：`ios/Yinzhi/App/YinzhiApp.swift`
+- iOS 设计系统：`ios/Yinzhi/Core/Design/`
+- iOS Typed Clients：`ios/Yinzhi/Core/Networking/`
+- 本地缓存与同步边界：`ios/Yinzhi/Core/Storage/`
+- 共享 Swift 领域逻辑：`Sources/YinzhiCore/`
+- 后端入口：`backend/app/main.py`
+- 后端 API：`backend/app/api/routes/`
+- 后端领域与持久化：`backend/app/domain/`、`backend/app/persistence/`
+- LLM 适配层：`backend/app/services/llm.py`
 
-## 文档索引
-- 架构总览: `docs/architecture/system-overview.md`
-- 本地环境: `docs/architecture/local-environment.md`
-- 产品范围: `docs/product/v1-scope.md`
-- 决策记录: `docs/decisions/ADR-0001-full-stack-architecture.md`
-- 质量策略: `docs/quality/verification-matrix.md`
-- 当前 OpenSpec 变更: `openspec/changes/bootstrap-yinzhi-v1-1/`
+## 当前模块职责
+- `iOS App`
+  - 当前主系统
+  - 负责页面、离线记录、本地设置、咖啡因 / 入睡影响计算消费、系统能力集成
+- `Local Data + SyncProvider`
+  - 当前用户日志、个人设置、个人饮品模板的主数据边界
+  - `iCloud` 是增强路径，`LocalOnly` 是合法模式
+- `Backend`
+  - 当前辅助系统
+  - 负责品牌目录、support/admin、可选导出、LLM/support 适配、未来跨平台扩展缝
 
-## 最近决策
-- 采用前后端分离，服务端为业务真源，本地 SwiftData 作为缓存和 UI 数据源
-- 后端选型为 FastAPI 模块化单体，首版保持私有用户 API
-- UI 主设计按 iOS 26+ Liquid Glass 实现，同时对 iOS 17-25 提供材质 fallback
-- 推荐系统首版仅做可解释、确定性的规则引擎，不做开放式对话
-- 本地基础设施统一走 Podman + podman-compose，项目脚本不强制 machine provider，避免和宿主机现有的 `libkrun` / `applehv` 配置冲突
-- 当宿主机使用本地 VPN/代理端口时，通过 `scripts/configure-podman-proxy.sh` 只给 Podman VM 注入代理，不影响 macOS 全局网络
-- iOS 端登录分为正式 Apple 登录入口和开发期直连后端入口，便于 AI 在无真机账号态下持续联调
-- 客户端联网边界固定为 `AppConfig + APIContainer + SessionStore + OfflineCacheStore`，页面层不直连 `URLSession`
-- 后端仓储边界固定为 `AppRepository Protocol + SQLAlchemyRepository + session factory`，路由层不感知具体数据库实现
-- 开发环境默认落 SQLite 以避免中间件阻塞，PostgreSQL 通过 `YINZHI_DATABASE_URL` 切换
-- 饮品目录首版直接携带品牌、风味、冲泡方法和配方摘要，记录页承担品牌筛选与 Brew Lab 交互
-- 首页首屏遵循“先判定、再操作、后解释”，风险说明移到横向建议轨道，避免长文案挤占决策区
-- support 平台作为开发者后台最小集，当前覆盖反馈复核、规则状态、OpenAI 兼容 LLM 联调、原始返回查看和服务快照刷新
+## 当前生效的 OpenSpec
+
+### 主方向
+- `openspec/changes/coffee-first-recording-reset/`
+- `openspec/changes/offline-focus-surface-reset/`
+- `openspec/changes/local-first-architecture-alignment/`
+
+### 体验细化
+- `openspec/changes/hicoffee-quick-capture/`
+- `openspec/changes/mvp-experience-polish/`
+- `openspec/changes/home-and-log-density-reset/`
+- `openspec/changes/catalog-depth-and-template-management/`
+
+### 文档治理
+- `openspec/changes/documentation-and-spec-consolidation/`
+
+### 基础历史
+- `openspec/changes/bootstrap-yinzhi-v1-1/`
+
+## 稳定决策
+- 当前主记录链路不得依赖后端可用性
+- 用户日志、个人设置和个人饮品模板在 Apple 生态内以本地数据为主真源
+- 同步必须继续走 `SyncProvider`，页面层不直接接触 iCloud / CloudKit API
+- 后端继续保留 typed API 和持久化边界，但定位为辅助系统而不是当前真源
+- 咖啡因与入睡影响模型必须保持确定性、可测试、可跨 iPhone / Widget / Watch 复用
+- 记录页优先级固定为：先完成记录，再浏览目录
+- 图片识别必须保持本地 OCR + 可回退搜索
+- 语音输入必须经过结构化确认，不直接把自由文本写成最终记录
+- Liquid Glass 只用于高价值表面，必须保留旧系统 fallback
+
+## 当前体验结论
+- 首页：只保留当前体内咖啡因、入睡残留和 `记一杯`
+- 记录：上方是记录入口，下方是品牌目录；目录饮品为横条 row；已增加咖啡因计算器二级页面
+- 分析：收口为咖啡因时间视图，不再让糖分 / 补水等次要结构抢主位
+- 我的：改为多级列表设置，具体设置与数据动作下沉到二级页面
+
+## 验证状态
+- 已通过：
+  - `swift test`
+  - `xcodebuild -project ios/Yinzhi.xcodeproj -scheme Yinzhi -destination 'platform=iOS Simulator,name=iPhone 17 Pro' build`
+  - `source .venv/bin/activate && pytest backend/tests -q`
+- 已验证边界：
+  - 本地快照 round-trip
+  - 本地缓存全量替换
+  - 离线记录后的品牌 / 冲煮方式保留
+- 尚未完成：
+  - 带正式 iCloud capability 的真机跨设备同步验收
+  - Widget / Watch 的正式产物验证
 
 ## 未决问题
-- Apple 身份令牌的正式验签、公钥轮换和生产环境 secrets 管理
-- PostgreSQL、Redis、对象存储和管理后台的生产部署方案
-- HealthKit 读写字段的最终清单与审核用隐私文案
-- LLM provider 的正式选型、限流、审计与 prompt 版本化管理
-- Brew Lab 后续是否需要扩展到更多茶饮、奶萃和咖啡机配方体系
+- iCloud / CloudKit 的正式 capability 与多设备真同步验收
+- 品牌目录从 seed 走向可持续维护机制
+- 语音短句 parser 与图片识别命中率继续提高
+- 后端 support/admin 与目录管理的长期边界
+- HarmonyOS 适配时的跨生态同步策略
 
 ## 下一步任务
-1. 补上 Apple 登录验签、JWT 刷新链路和 iOS entitlements
-2. 为 Podman 中间件补全 PostgreSQL、Redis、MinIO 的稳定启动与本地切库说明
-3. 接入 HealthKit 最小读取集与截图回归基线
-4. 为 SQLAlchemy 层补 Alembic 迁移和 PostgreSQL 联调说明
-5. 为 support 平台增加登录保护、操作审计和规则开关持久化
-6. 继续压缩首页首屏信息密度，并为关键状态补截图回归基线
+1. 完成 iCloud 真同步验收，明确是否升级到更完整的 CloudKit 容器方案
+2. 继续打磨记录页品牌目录、语音 parser 和图片识别命中率
+3. 在当前离线结构上补截图回归、视觉细节和微交互
+4. 规划并实现 Widget 与 Watch app 的最小可用目标
+5. Apple 路线稳定后，再单开 HarmonyOS 适配研究

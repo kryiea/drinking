@@ -141,6 +141,29 @@ class DailyAggregate(BaseModel):
     category_breakdown: List[CategoryBreakdown]
 
 
+SleepReadiness = Literal["sleep-friendly", "watch", "likely-disruptive"]
+
+
+class CaffeineForecastPoint(BaseModel):
+    at: datetime
+    remaining_caffeine_mg: float
+    stage: SleepReadiness
+
+
+class CaffeineForecast(BaseModel):
+    calculated_at: datetime
+    sleep_at: datetime
+    half_life_hours: float
+    current_estimate_mg: float
+    projected_sleep_mg: float
+    safe_sleep_threshold_mg: float
+    recommended_sleep_time: Optional[datetime] = None
+    sleep_readiness: SleepReadiness
+    summary: str
+    sleep_impact: str
+    timeline: List[CaffeineForecastPoint] = Field(default_factory=list)
+
+
 class RecommendationExplanation(BaseModel):
     rule_id: str
     trigger: str
@@ -155,6 +178,15 @@ class RecommendationDecision(BaseModel):
     title: str
     summary: str
     explanation: RecommendationExplanation
+
+
+class DailyAIBrief(BaseModel):
+    mode: Literal["live", "fallback"] = "fallback"
+    generated_at: datetime
+    headline: str
+    narrative: str
+    next_actions: List[str] = Field(default_factory=list)
+    sleep_note: str
 
 
 class SyncEnvelope(BaseModel):

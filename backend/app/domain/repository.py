@@ -184,6 +184,102 @@ def seed_drink_definitions() -> List[DrinkDefinition]:
                 DrinkServingOption(id="large", name="大杯", volume_ml=360, multiplier=1.45),
             ],
         ),
+        DrinkDefinition(
+            id="cotti-coconut-latte",
+            name="生椰米乳拿铁",
+            category="咖啡",
+            brand="库迪",
+            brand_collection="日常通勤",
+            tags=["奶咖", "通勤", "椰香"],
+            hero_flavor="椰乳谷物",
+            preparation_methods=["espresso-machine", "ready-to-drink"],
+            metrics=IngredientMetrics(
+                caffeine_mg=118, sugar_g=11, calories_kcal=182, hydration_ml=285, volume_ml=360
+            ),
+            serving_options=[
+                DrinkServingOption(id="regular", name="标准杯", volume_ml=360, multiplier=1.0)
+            ],
+        ),
+        DrinkDefinition(
+            id="luckin-thick-milk-latte",
+            name="厚乳拿铁",
+            category="咖啡",
+            brand="幸运咖",
+            brand_collection="日常咖啡",
+            tags=["奶咖", "高频", "厚乳"],
+            hero_flavor="浓奶甜感",
+            preparation_methods=["espresso-machine", "ready-to-drink"],
+            metrics=IngredientMetrics(
+                caffeine_mg=116, sugar_g=13, calories_kcal=176, hydration_ml=270, volume_ml=340
+            ),
+            serving_options=[
+                DrinkServingOption(id="regular", name="标准杯", volume_ml=340, multiplier=1.0)
+            ],
+        ),
+        DrinkDefinition(
+            id="seesaw-chocolate-americano",
+            name="黑巧美式",
+            category="咖啡",
+            brand="Seesaw",
+            brand_collection="城市咖啡",
+            tags=["美式", "创意咖啡", "可可"],
+            hero_flavor="黑巧可可",
+            preparation_methods=["espresso-machine"],
+            metrics=IngredientMetrics(
+                caffeine_mg=142, sugar_g=5, calories_kcal=56, hydration_ml=300, volume_ml=360
+            ),
+            serving_options=[
+                DrinkServingOption(id="large", name="大杯", volume_ml=360, multiplier=1.0)
+            ],
+        ),
+        DrinkDefinition(
+            id="chabaidao-yuqilin",
+            name="豆乳玉麒麟",
+            category="奶茶",
+            brand="茶百道",
+            brand_collection="招牌奶茶",
+            tags=["豆乳", "乌龙", "高频"],
+            hero_flavor="豆乳乌龙",
+            preparation_methods=["milk-tea", "ready-to-drink"],
+            metrics=IngredientMetrics(
+                caffeine_mg=64, sugar_g=24, calories_kcal=238, hydration_ml=420, volume_ml=500
+            ),
+            serving_options=[
+                DrinkServingOption(id="less-sugar", name="少糖", volume_ml=500, multiplier=0.88)
+            ],
+        ),
+        DrinkDefinition(
+            id="guming-cheese-grape",
+            name="超A芝士葡萄",
+            category="奶茶",
+            brand="古茗",
+            brand_collection="果茶",
+            tags=["果茶", "芝士", "鲜果"],
+            hero_flavor="葡萄芝士",
+            preparation_methods=["milk-tea", "ready-to-drink"],
+            metrics=IngredientMetrics(
+                caffeine_mg=26, sugar_g=25, calories_kcal=214, hydration_ml=435, volume_ml=500
+            ),
+            serving_options=[
+                DrinkServingOption(id="regular", name="标准杯", volume_ml=500, multiplier=1.0)
+            ],
+        ),
+        DrinkDefinition(
+            id="hushang-yangzhi",
+            name="杨枝甘露",
+            category="奶茶",
+            brand="沪上阿姨",
+            brand_collection="水果乳饮",
+            tags=["芒果", "西米", "高频"],
+            hero_flavor="芒果西柚",
+            preparation_methods=["milk-tea", "ready-to-drink"],
+            metrics=IngredientMetrics(
+                caffeine_mg=18, sugar_g=29, calories_kcal=260, hydration_ml=410, volume_ml=500
+            ),
+            serving_options=[
+                DrinkServingOption(id="regular", name="标准杯", volume_ml=500, multiplier=1.0)
+            ],
+        ),
     ]
 
 

@@ -18,3 +18,7 @@
 - [x] Upgrade Home into a decision-first layout and turn support page into a live developer console with presets and raw payload inspection
 - [x] Validate full iOS build and simulator smoke test under complete Xcode installation
 - [x] Add Podman VM proxy bridge flow that avoids mutating host VPN or macOS global proxy settings
+- [x] Add caffeine metabolism forecast and AI brief APIs, typed clients, and analysis UI surfaces
+- [x] Add AI-guided next-drink shortcuts plus Brew Lab-driven record flows across Home and Log
+- [x] Add a root-level add-drink celebration overlay with sleep-window impact and sync feedback above the tab shell
+- [x] Audit iPhone simulator UI completeness and tighten card height / bottom safe-area spacing on scroll-heavy tabs

@@ -5,98 +5,238 @@ struct ProfileView: View {
     @Bindable var environment: AppEnvironment
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
-                SectionCard(title: environment.connectionTitle, subtitle: "前后端分离 + 本地缓存的当前状态") {
-                    profileMetric(title: "后端地址", value: environment.backendDisplayText)
-                    profileMetric(title: "待同步记录", value: "\(environment.pendingSyncCount)")
-                    if let lastSyncedAt = environment.session?.sync.lastSyncedAt {
-                        profileMetric(
-                            title: "最近同步",
-                            value: lastSyncedAt.formatted(date: .omitted, time: .shortened)
+        List {
+            Section("节奏") {
+                NavigationLink {
+                    SleepTimeSettingsView(environment: environment)
+                } label: {
+                    SettingsRow(
+                        title: "入睡时间",
+                        detail: environment.preferences.sleepHourText
+                    )
+                }
+
+                NavigationLink {
+                    MetabolismSettingsView(environment: environment)
+                } label: {
+                    SettingsRow(
+                        title: "代谢速度",
+                        detail: environment.preferences.metabolismProfile.label
+                    )
+                }
+            }
+
+            Section("数据") {
+                NavigationLink {
+                    SyncAndDataSettingsView(environment: environment)
+                } label: {
+                    SettingsRow(
+                        title: "同步与数据",
+                        detail: environment.syncStrategyLabel
+                    )
+                }
+
+                NavigationLink {
+                    MyDrinksSettingsView(environment: environment)
+                } label: {
+                    SettingsRow(
+                        title: "我的饮品",
+                        detail: "\(environment.userDrinkTemplates.count) 个"
+                    )
+                }
+            }
+
+            if environment.canUseRemoteAPI {
+                Section("开发") {
+                    NavigationLink {
+                        DeveloperConnectionSettingsView(environment: environment)
+                    } label: {
+                        SettingsRow(
+                            title: "开发连接",
+                            detail: environment.connectionShortLabel
                         )
-                    }
-                    if let statusMessage = environment.statusMessage {
-                        Text(statusMessage)
-                            .font(.system(.footnote, design: .rounded))
-                            .foregroundStyle(.secondary)
-                    }
-                    if let errorMessage = environment.errorMessage {
-                        Text(errorMessage)
-                            .font(.system(.footnote, design: .rounded, weight: .semibold))
-                            .foregroundStyle(.orange)
-                    }
-                }
-
-                SectionCard(title: environment.profile.displayName, subtitle: "账号、目标与隐私设置") {
-                    HStack {
-                        profileMetric(title: "年龄", value: "\(environment.profile.age)")
-                        profileMetric(title: "睡眠时间", value: environment.profile.sleepHourText)
-                        profileMetric(title: "咖啡因敏感", value: environment.profile.caffeineSensitive ? "是" : "否")
-                    }
-                }
-
-                SectionCard(title: "今日目标", subtitle: "这些阈值会驱动首页与建议引擎") {
-                    profileMetric(title: "咖啡因上限", value: "\(Int(environment.dashboard.goals.caffeineLimitMG))mg")
-                    profileMetric(title: "糖分上限", value: "\(Int(environment.dashboard.goals.sugarLimitG))g")
-                    profileMetric(title: "补水目标", value: "\(Int(environment.dashboard.goals.hydrationGoalML))ml")
-                }
-
-                SectionCard(title: "数据与隐私", subtitle: "服务端为真源，本地缓存负责离线体验") {
-                    Label("Apple 登录接后端会话", systemImage: "person.badge.key")
-                    Label("SwiftData 离线缓存已接入，失败时会落本地待补同步", systemImage: "externaldrive.badge.icloud")
-                    Label("HealthKit 权限将在正式工程中按最小范围申请", systemImage: "heart.text.square")
-                }
-
-                VStack(spacing: 12) {
-                    if environment.session == nil, environment.canUseRemoteAPI {
-                        Button("开发模式直连后端") {
-                            Task {
-                                await environment.signInWithDevelopmentToken()
-                            }
-                        }
-                        .buttonStyle(SecondaryGlassButtonStyle())
-                    }
-
-                    if environment.pendingSyncCount > 0, environment.session != nil {
-                        Button("立即补同步离线记录") {
-                            Task {
-                                await environment.syncPendingLogs()
-                            }
-                        }
-                        .buttonStyle(SecondaryGlassButtonStyle())
-                    }
-
-                    Button("请求导出本周记录") {
-                        Task {
-                            await environment.requestWeeklyExport()
-                        }
-                    }
-                    .buttonStyle(PrimaryCTAStyle())
-
-                    if environment.session != nil {
-                        Button("退出当前登录") {
-                            Task {
-                                await environment.signOut()
-                            }
-                        }
-                        .buttonStyle(SecondaryGlassButtonStyle())
                     }
                 }
             }
-            .padding(16)
         }
+        .listStyle(.insetGrouped)
         .navigationTitle("我的")
     }
+}
 
-    private func profileMetric(title: String, value: String) -> some View {
+private struct SettingsRow: View {
+    let title: String
+    let detail: String
+
+    var body: some View {
         HStack {
             Text(title)
-                .font(.system(.subheadline, design: .rounded))
-            Spacer()
-            Text(value)
-                .font(.system(.subheadline, design: .rounded, weight: .bold))
+                .font(.system(.body, design: .rounded, weight: .semibold))
                 .foregroundStyle(AppTheme.ink)
+            Spacer()
+            Text(detail)
+                .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                .foregroundStyle(.secondary)
         }
+    }
+}
+
+private struct SleepTimeSettingsView: View {
+    @Bindable var environment: AppEnvironment
+
+    var body: some View {
+        List {
+            DatePicker(
+                "目标入睡时间",
+                selection: Binding(
+                    get: { environment.sleepScheduleDate },
+                    set: { environment.updateSleepSchedule($0) }
+                ),
+                displayedComponents: .hourAndMinute
+            )
+            .datePickerStyle(.wheel)
+            .labelsHidden()
+            .frame(maxWidth: .infinity)
+        }
+        .navigationTitle("入睡时间")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+private struct MetabolismSettingsView: View {
+    @Bindable var environment: AppEnvironment
+
+    var body: some View {
+        List {
+            Section {
+                Picker(
+                    "咖啡因代谢",
+                    selection: Binding(
+                        get: { environment.preferences.metabolismProfile },
+                        set: { environment.updateMetabolismProfile($0) }
+                    )
+                ) {
+                    ForEach(CaffeineMetabolismProfile.allCases) { item in
+                        Text(item.label).tag(item)
+                    }
+                }
+                .pickerStyle(.inline)
+            } footer: {
+                Text(environment.preferences.metabolismProfile.caption)
+            }
+        }
+        .navigationTitle("代谢速度")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+private struct SyncAndDataSettingsView: View {
+    @Bindable var environment: AppEnvironment
+
+    var body: some View {
+        List {
+            Section {
+                Toggle(
+                    "iCloud 同步",
+                    isOn: Binding(
+                        get: { environment.preferences.iCloudPlanEnabled },
+                        set: { environment.updateICloudPlanEnabled($0) }
+                    )
+                )
+
+                LabeledContent("状态", value: environment.syncStrategyLabel)
+                LabeledContent("待同步", value: "\(environment.pendingSyncCount) 条")
+            } header: {
+                Text("同步")
+            } footer: {
+                Text(environment.syncStrategyCaption)
+            }
+
+            Section("数据") {
+                Button("导出本周记录") {
+                    Task {
+                        await environment.requestWeeklyExport()
+                    }
+                }
+
+                if let statusMessage = environment.statusMessage {
+                    Text(statusMessage)
+                        .font(.system(.footnote, design: .rounded))
+                        .foregroundStyle(.secondary)
+                }
+
+                if let errorMessage = environment.errorMessage {
+                    Text(errorMessage)
+                        .font(.system(.footnote, design: .rounded, weight: .semibold))
+                        .foregroundStyle(.orange)
+                }
+            }
+        }
+        .navigationTitle("同步与数据")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+private struct MyDrinksSettingsView: View {
+    @Bindable var environment: AppEnvironment
+
+    var body: some View {
+        List {
+            if environment.userDrinkTemplates.isEmpty {
+                Text("还没有自定义饮品。")
+                    .foregroundStyle(.secondary)
+            } else {
+                ForEach(environment.userDrinkTemplates) { template in
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("\(template.brand) · \(template.name)")
+                            .font(.system(.body, design: .rounded, weight: .semibold))
+                        Text(template.detailLine)
+                            .font(.system(.caption, design: .rounded, weight: .semibold))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+        }
+        .navigationTitle("我的饮品")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+private struct DeveloperConnectionSettingsView: View {
+    @Bindable var environment: AppEnvironment
+
+    var body: some View {
+        List {
+            Section {
+                LabeledContent("连接状态", value: environment.connectionShortLabel)
+                Text(environment.connectionSupportingText)
+                    .font(.system(.footnote, design: .rounded, weight: .semibold))
+                    .foregroundStyle(environment.connectionTint)
+            }
+
+            Section("操作") {
+                if environment.session == nil {
+                    Button(environment.errorMessage?.contains("过期") == true ? "重新连接开发后端" : "连接开发后端") {
+                        Task {
+                            await environment.signInWithDevelopmentToken()
+                        }
+                    }
+                } else {
+                    Button("补同步离线记录") {
+                        Task {
+                            await environment.syncPendingLogs()
+                        }
+                    }
+
+                    Button("退出当前连接", role: .destructive) {
+                        Task {
+                            await environment.signOut()
+                        }
+                    }
+                }
+            }
+        }
+        .navigationTitle("开发连接")
+        .navigationBarTitleDisplayMode(.inline)
     }
 }

@@ -23,6 +23,14 @@
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
+	<key>NSCameraUsageDescription</key>
+	<string>饮知会使用相机识别杯贴、包装或菜单上的饮品文字，帮助你更快记录。</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>饮知会使用麦克风将你的短句转成饮品记录，例如品牌、饮品名和杯型。</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>饮知会读取你选择的饮品照片，用于本地识别品牌和饮品，不会把原图直接上传。</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>饮知会把你的语音转成文字，只用于本地生成候选饮品并加快记录。</string>
 	<key>YINZHI_API_BASE_URL</key>
 	<string>http://127.0.0.1:8000</string>
 	<key>YINZHI_DEVELOPMENT_TOKEN_SEED</key>

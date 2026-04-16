@@ -1,5 +1,10 @@
 # Bootstrap Spec
 
+## Historical Note
+- This spec records the repository bootstrap requirements for the initial full-stack skeleton.
+- It is not the current source of truth for product direction.
+- Current architecture and product route are defined by `ADR-0003` and later active OpenSpec changes.
+
 ## Requirements
 - The repository must contain a backend folder with a FastAPI application and grouped `/v1` routes.
 - The repository must contain an iOS source tree with SwiftUI app shell code for `首页`, `记录`, `分析`, `我的`.
@@ -8,3 +13,5 @@
 - At least one backend test suite and one Swift test suite must be runnable locally.
 - The drink catalog contract must support brand-aware definitions and preparation metadata for both search and brew-assist flows.
 - The repository must provide a developer support/admin surface and an OpenAI-compatible LLM integration seam that can run in fallback mode without secrets.
+- The bootstrap repository must expose typed seams for caffeine-metabolism analysis and optional future recommendation experiments rather than ad hoc view logic.
+- Add-drink interactions must provide visible feedback above the tab chrome, including record status and sleep-impact context.

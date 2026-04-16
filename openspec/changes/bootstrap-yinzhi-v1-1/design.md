@@ -19,6 +19,10 @@
 - Shared pure Swift target for recommendation presentation and progress calculations.
 - Home emphasizes a compact "结论先行" layout instead of heavy explanatory copy.
 - Log expands into brand-aware quick entry plus a Brew Lab for hand brew and machine-style parameter estimation.
+- The shared app environment now carries caffeine-metabolism forecast data, AI brief data, and a global add-drink feedback state so Home, Log, Insights, and Profile stay in sync.
+- Add-drink UX uses a root-level celebration overlay above the tab shell, including caffeine delta, sleep-window impact, and sync status instead of a silent write-only interaction.
+- Horizontal AI suggestion cards are intentionally compacted so the primary CTA remains fully visible above the tab bar on iPhone-class screens.
+- Scroll-heavy tabs reserve extra bottom spacing to keep Liquid Glass tab chrome from clipping important CTAs or analysis rows.
 
 ## Docs
 - Root rules in `AGENTS.md`
