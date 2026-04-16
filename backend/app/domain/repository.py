@@ -56,73 +56,7 @@ def seed_drink_definitions() -> List[DrinkDefinition]:
                 caffeine_mg=120, sugar_g=7, calories_kcal=145, hydration_ml=260, volume_ml=320
             ),
             serving_options=[
-                DrinkServingOption(id="regular", name="标准杯", volume_ml=320, multiplier=1.0),
-                DrinkServingOption(id="large", name="大杯", volume_ml=420, multiplier=1.3),
-            ],
-        ),
-        DrinkDefinition(
-            id="jasmine-milk-tea",
-            name="茉莉奶绿",
-            category="奶茶",
-            brand="霸王茶姬",
-            brand_collection="东方茶饮",
-            tags=["下午茶", "高糖风险", "品牌款"],
-            hero_flavor="茉莉鲜奶",
-            preparation_methods=["milk-tea", "ready-to-drink"],
-            metrics=IngredientMetrics(
-                caffeine_mg=55, sugar_g=28, calories_kcal=265, hydration_ml=480, volume_ml=500
-            ),
-            serving_options=[
-                DrinkServingOption(id="normal", name="常规糖", volume_ml=500, multiplier=1.0),
-                DrinkServingOption(id="half-sugar", name="半糖", volume_ml=500, multiplier=0.78),
-            ],
-        ),
-        DrinkDefinition(
-            id="sparkling-water",
-            name="青柠气泡水",
-            category="气泡饮",
-            brand="元气森林",
-            brand_collection="轻负担补水",
-            tags=["低糖", "补水", "即饮"],
-            hero_flavor="青柠清爽",
-            preparation_methods=["sparkling", "ready-to-drink"],
-            metrics=IngredientMetrics(
-                caffeine_mg=0, sugar_g=1, calories_kcal=12, hydration_ml=330, volume_ml=330
-            ),
-            serving_options=[
-                DrinkServingOption(id="can", name="一听", volume_ml=330, multiplier=1.0)
-            ],
-        ),
-        DrinkDefinition(
-            id="energy-shot",
-            name="能量饮料",
-            category="功能饮料",
-            brand="东鹏特饮",
-            brand_collection="高刺激补能",
-            tags=["加班", "高咖啡因", "即饮"],
-            hero_flavor="高刺激提神",
-            preparation_methods=["ready-to-drink"],
-            metrics=IngredientMetrics(
-                caffeine_mg=180, sugar_g=24, calories_kcal=165, hydration_ml=250, volume_ml=250
-            ),
-            serving_options=[
-                DrinkServingOption(id="bottle", name="标准瓶", volume_ml=250, multiplier=1.0)
-            ],
-        ),
-        DrinkDefinition(
-            id="fresh-orange",
-            name="鲜榨橙汁",
-            category="果汁",
-            brand="盒马鲜制",
-            brand_collection="鲜榨果蔬",
-            tags=["维生素", "早餐", "即饮"],
-            hero_flavor="清甜果香",
-            preparation_methods=["ready-to-drink"],
-            metrics=IngredientMetrics(
-                caffeine_mg=0, sugar_g=17, calories_kcal=88, hydration_ml=260, volume_ml=280
-            ),
-            serving_options=[
-                DrinkServingOption(id="small", name="小杯", volume_ml=280, multiplier=1.0)
+                DrinkServingOption(id="regular", name="标准杯", volume_ml=320, multiplier=1.0)
             ],
         ),
         DrinkDefinition(
@@ -150,38 +84,103 @@ def seed_drink_definitions() -> List[DrinkDefinition]:
                 caffeine_mg=130, sugar_g=0, calories_kcal=6, hydration_ml=255, volume_ml=260
             ),
             serving_options=[
-                DrinkServingOption(id="v60", name="V60 一杯份", volume_ml=260, multiplier=1.0),
-                DrinkServingOption(id="share", name="分享壶", volume_ml=520, multiplier=2.0),
+                DrinkServingOption(id="v60", name="V60 一杯份", volume_ml=260, multiplier=1.0)
             ],
         ),
         DrinkDefinition(
-            id="americano-seesaw",
-            name="双份美式",
+            id="americano-iced",
+            name="冰美式",
             category="咖啡",
-            brand="Seesaw",
-            brand_collection="城市咖啡",
-            tags=["意式机", "办公", "高咖啡因"],
-            hero_flavor="坚果可可",
-            preparation_methods=["espresso-machine"],
-            brew_recipe=BrewRecipe(
-                method="espresso-machine",
-                title="双份意式美式",
-                ratio_text="18g 粉 -> 36g 浓缩",
-                coffee_g=18,
-                water_ml=180,
-                output_ml=240,
-                concentrate_ml=36,
-                brew_seconds=28,
-                temperature_c=93,
-                grind_text="意式细研磨",
-                tasting_note="适合下午高强度编码前的小杯快提神",
-            ),
+            brand="瑞幸",
+            brand_collection="日常通勤",
+            tags=["低糖", "即点", "意式机"],
+            hero_flavor="清爽黑咖",
+            preparation_methods=["espresso-machine", "ready-to-drink"],
             metrics=IngredientMetrics(
-                caffeine_mg=145, sugar_g=0, calories_kcal=8, hydration_ml=220, volume_ml=240
+                caffeine_mg=140, sugar_g=0, calories_kcal=8, hydration_ml=360, volume_ml=380
             ),
             serving_options=[
-                DrinkServingOption(id="double", name="双份", volume_ml=240, multiplier=1.0),
-                DrinkServingOption(id="large", name="大杯", volume_ml=360, multiplier=1.45),
+                DrinkServingOption(id="large", name="大杯", volume_ml=380, multiplier=1.0)
+            ],
+        ),
+        DrinkDefinition(
+            id="luckin-coconut-latte",
+            name="生椰拿铁",
+            category="咖啡",
+            brand="瑞幸",
+            brand_collection="日常通勤",
+            tags=["椰乳", "奶咖", "高频"],
+            hero_flavor="生椰奶香",
+            preparation_methods=["espresso-machine", "ready-to-drink"],
+            metrics=IngredientMetrics(
+                caffeine_mg=126, sugar_g=10, calories_kcal=168, hydration_ml=285, volume_ml=320
+            ),
+            serving_options=[
+                DrinkServingOption(id="regular", name="中杯", volume_ml=320, multiplier=1.0)
+            ],
+        ),
+        DrinkDefinition(
+            id="luckin-velvet-latte",
+            name="丝绒拿铁",
+            category="咖啡",
+            brand="瑞幸",
+            brand_collection="日常通勤",
+            tags=["奶咖", "顺滑", "高频"],
+            hero_flavor="奶香可可",
+            preparation_methods=["espresso-machine", "ready-to-drink"],
+            metrics=IngredientMetrics(
+                caffeine_mg=132, sugar_g=11, calories_kcal=182, hydration_ml=290, volume_ml=340
+            ),
+            serving_options=[
+                DrinkServingOption(id="large", name="大杯", volume_ml=340, multiplier=1.0)
+            ],
+        ),
+        DrinkDefinition(
+            id="starbucks-flat-white",
+            name="馥芮白",
+            category="咖啡",
+            brand="星巴克",
+            brand_collection="经典意式",
+            tags=["奶咖", "意式机", "高频"],
+            hero_flavor="浓缩奶香",
+            preparation_methods=["espresso-machine"],
+            metrics=IngredientMetrics(
+                caffeine_mg=130, sugar_g=9, calories_kcal=150, hydration_ml=250, volume_ml=330
+            ),
+            serving_options=[
+                DrinkServingOption(id="tall", name="中杯", volume_ml=330, multiplier=1.0)
+            ],
+        ),
+        DrinkDefinition(
+            id="starbucks-americano",
+            name="美式咖啡",
+            category="咖啡",
+            brand="星巴克",
+            brand_collection="经典意式",
+            tags=["黑咖", "意式机", "高频"],
+            hero_flavor="坚果焦糖",
+            preparation_methods=["espresso-machine", "ready-to-drink"],
+            metrics=IngredientMetrics(
+                caffeine_mg=150, sugar_g=0, calories_kcal=10, hydration_ml=340, volume_ml=355
+            ),
+            serving_options=[
+                DrinkServingOption(id="tall", name="中杯", volume_ml=355, multiplier=1.0)
+            ],
+        ),
+        DrinkDefinition(
+            id="starbucks-shaken-oat-latte",
+            name="冰摇浓缩燕麦拿铁",
+            category="咖啡",
+            brand="星巴克",
+            brand_collection="经典意式",
+            tags=["燕麦", "冰咖", "奶咖"],
+            hero_flavor="燕麦焦糖",
+            preparation_methods=["espresso-machine", "ready-to-drink"],
+            metrics=IngredientMetrics(
+                caffeine_mg=145, sugar_g=9, calories_kcal=148, hydration_ml=285, volume_ml=350
+            ),
+            serving_options=[
+                DrinkServingOption(id="grande", name="大杯", volume_ml=350, multiplier=1.0)
             ],
         ),
         DrinkDefinition(
@@ -201,80 +200,176 @@ def seed_drink_definitions() -> List[DrinkDefinition]:
             ],
         ),
         DrinkDefinition(
-            id="luckin-thick-milk-latte",
-            name="厚乳拿铁",
+            id="cotti-orange-americano",
+            name="橙C美式",
             category="咖啡",
-            brand="幸运咖",
-            brand_collection="日常咖啡",
-            tags=["奶咖", "高频", "厚乳"],
-            hero_flavor="浓奶甜感",
+            brand="库迪",
+            brand_collection="日常通勤",
+            tags=["果咖", "美式", "高频"],
+            hero_flavor="橙香黑咖",
             preparation_methods=["espresso-machine", "ready-to-drink"],
             metrics=IngredientMetrics(
-                caffeine_mg=116, sugar_g=13, calories_kcal=176, hydration_ml=270, volume_ml=340
+                caffeine_mg=136, sugar_g=6, calories_kcal=84, hydration_ml=320, volume_ml=420
             ),
             serving_options=[
-                DrinkServingOption(id="regular", name="标准杯", volume_ml=340, multiplier=1.0)
+                DrinkServingOption(id="large", name="大杯", volume_ml=420, multiplier=1.0)
             ],
         ),
         DrinkDefinition(
-            id="seesaw-chocolate-americano",
-            name="黑巧美式",
+            id="cotti-latte",
+            name="拿铁",
             category="咖啡",
-            brand="Seesaw",
-            brand_collection="城市咖啡",
-            tags=["美式", "创意咖啡", "可可"],
-            hero_flavor="黑巧可可",
-            preparation_methods=["espresso-machine"],
+            brand="库迪",
+            brand_collection="日常通勤",
+            tags=["奶咖", "通勤", "基础款"],
+            hero_flavor="牛奶坚果",
+            preparation_methods=["espresso-machine", "ready-to-drink"],
             metrics=IngredientMetrics(
-                caffeine_mg=142, sugar_g=5, calories_kcal=56, hydration_ml=300, volume_ml=360
+                caffeine_mg=122, sugar_g=8, calories_kcal=146, hydration_ml=270, volume_ml=320
             ),
             serving_options=[
-                DrinkServingOption(id="large", name="大杯", volume_ml=360, multiplier=1.0)
+                DrinkServingOption(id="regular", name="中杯", volume_ml=320, multiplier=1.0)
             ],
         ),
         DrinkDefinition(
-            id="chabaidao-yuqilin",
-            name="豆乳玉麒麟",
+            id="bo-ya-jue-xian",
+            name="伯牙绝弦",
             category="奶茶",
-            brand="茶百道",
+            brand="霸王茶姬",
             brand_collection="招牌奶茶",
-            tags=["豆乳", "乌龙", "高频"],
-            hero_flavor="豆乳乌龙",
+            tags=["乌龙", "奶茶", "品牌款"],
+            hero_flavor="茶香奶韵",
             preparation_methods=["milk-tea", "ready-to-drink"],
             metrics=IngredientMetrics(
-                caffeine_mg=64, sugar_g=24, calories_kcal=238, hydration_ml=420, volume_ml=500
+                caffeine_mg=82, sugar_g=22, calories_kcal=240, hydration_ml=430, volume_ml=500
             ),
             serving_options=[
-                DrinkServingOption(id="less-sugar", name="少糖", volume_ml=500, multiplier=0.88)
+                DrinkServingOption(id="less-sugar", name="少糖", volume_ml=500, multiplier=0.9)
             ],
         ),
         DrinkDefinition(
-            id="guming-cheese-grape",
-            name="超A芝士葡萄",
+            id="chagee-flower-oolong",
+            name="花田乌龙",
             category="奶茶",
-            brand="古茗",
-            brand_collection="果茶",
-            tags=["果茶", "芝士", "鲜果"],
-            hero_flavor="葡萄芝士",
+            brand="霸王茶姬",
+            brand_collection="东方茶饮",
+            tags=["乌龙", "轻乳", "高频"],
+            hero_flavor="花香乌龙",
             preparation_methods=["milk-tea", "ready-to-drink"],
             metrics=IngredientMetrics(
-                caffeine_mg=26, sugar_g=25, calories_kcal=214, hydration_ml=435, volume_ml=500
+                caffeine_mg=66, sugar_g=20, calories_kcal=198, hydration_ml=438, volume_ml=500
             ),
             serving_options=[
                 DrinkServingOption(id="regular", name="标准杯", volume_ml=500, multiplier=1.0)
             ],
         ),
         DrinkDefinition(
-            id="hushang-yangzhi",
-            name="杨枝甘露",
+            id="chagee-white-mist",
+            name="白雾红尘",
             category="奶茶",
-            brand="沪上阿姨",
-            brand_collection="水果乳饮",
-            tags=["芒果", "西米", "高频"],
-            hero_flavor="芒果西柚",
+            brand="霸王茶姬",
+            brand_collection="东方茶饮",
+            tags=["红茶", "奶茶", "丝滑"],
+            hero_flavor="红茶奶香",
             preparation_methods=["milk-tea", "ready-to-drink"],
             metrics=IngredientMetrics(
-                caffeine_mg=18, sugar_g=29, calories_kcal=260, hydration_ml=410, volume_ml=500
+                caffeine_mg=60, sugar_g=23, calories_kcal=212, hydration_ml=430, volume_ml=500
+            ),
+            serving_options=[
+                DrinkServingOption(id="less-sugar", name="少糖", volume_ml=500, multiplier=0.88)
+            ],
+        ),
+        DrinkDefinition(
+            id="grape-jasmine",
+            name="多肉葡萄",
+            category="果茶",
+            brand="喜茶",
+            brand_collection="果茶",
+            tags=["果茶", "高频", "品牌款"],
+            hero_flavor="葡萄茉莉",
+            preparation_methods=["milk-tea", "ready-to-drink"],
+            metrics=IngredientMetrics(
+                caffeine_mg=28, sugar_g=26, calories_kcal=210, hydration_ml=420, volume_ml=500
+            ),
+            serving_options=[
+                DrinkServingOption(id="regular", name="标准杯", volume_ml=500, multiplier=1.0)
+            ],
+        ),
+        DrinkDefinition(
+            id="heytea-cheese-grape",
+            name="轻芝多肉葡萄",
+            category="果茶",
+            brand="喜茶",
+            brand_collection="果茶",
+            tags=["芝士", "葡萄", "高频"],
+            hero_flavor="葡萄芝香",
+            preparation_methods=["milk-tea", "ready-to-drink"],
+            metrics=IngredientMetrics(
+                caffeine_mg=30, sugar_g=24, calories_kcal=228, hydration_ml=415, volume_ml=500
+            ),
+            serving_options=[
+                DrinkServingOption(id="regular", name="标准杯", volume_ml=500, multiplier=1.0)
+            ],
+        ),
+        DrinkDefinition(
+            id="heytea-black-sugar-bobo",
+            name="烤黑糖波波牛乳",
+            category="奶茶",
+            brand="喜茶",
+            brand_collection="经典奶茶",
+            tags=["黑糖", "波波", "牛乳"],
+            hero_flavor="黑糖焦香",
+            preparation_methods=["milk-tea", "ready-to-drink"],
+            metrics=IngredientMetrics(
+                caffeine_mg=36, sugar_g=31, calories_kcal=286, hydration_ml=388, volume_ml=500
+            ),
+            serving_options=[
+                DrinkServingOption(id="regular", name="标准杯", volume_ml=500, multiplier=1.0)
+            ],
+        ),
+        DrinkDefinition(
+            id="alittle-boba-milk-tea",
+            name="波霸奶茶",
+            category="奶茶",
+            brand="一点点",
+            brand_collection="经典奶茶",
+            tags=["珍珠", "奶茶", "高频"],
+            hero_flavor="红茶奶香",
+            preparation_methods=["milk-tea", "ready-to-drink"],
+            metrics=IngredientMetrics(
+                caffeine_mg=54, sugar_g=32, calories_kcal=298, hydration_ml=400, volume_ml=500
+            ),
+            serving_options=[
+                DrinkServingOption(id="regular", name="标准杯", volume_ml=500, multiplier=1.0)
+            ],
+        ),
+        DrinkDefinition(
+            id="alittle-four-season-macchiato",
+            name="四季春玛奇朵",
+            category="奶茶",
+            brand="一点点",
+            brand_collection="清爽茶乳",
+            tags=["四季春", "奶盖", "高频"],
+            hero_flavor="奶盖青茶",
+            preparation_methods=["milk-tea", "ready-to-drink"],
+            metrics=IngredientMetrics(
+                caffeine_mg=46, sugar_g=20, calories_kcal=176, hydration_ml=430, volume_ml=500
+            ),
+            serving_options=[
+                DrinkServingOption(id="less-sugar", name="少糖", volume_ml=500, multiplier=0.88)
+            ],
+        ),
+        DrinkDefinition(
+            id="alittle-oolong-milk-tea",
+            name="乌龙奶茶",
+            category="奶茶",
+            brand="一点点",
+            brand_collection="经典奶茶",
+            tags=["乌龙", "奶茶", "经典"],
+            hero_flavor="焙香乌龙",
+            preparation_methods=["milk-tea", "ready-to-drink"],
+            metrics=IngredientMetrics(
+                caffeine_mg=58, sugar_g=26, calories_kcal=232, hydration_ml=418, volume_ml=500
             ),
             serving_options=[
                 DrinkServingOption(id="regular", name="标准杯", volume_ml=500, multiplier=1.0)

@@ -134,6 +134,202 @@ enum BrewStrength: String, Codable, Hashable, Sendable, CaseIterable, Identifiab
     }
 }
 
+enum CalculatorBrewMethod: String, Codable, Hashable, Sendable, CaseIterable, Identifiable {
+    case espresso
+    case pourOver
+    case capsule
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .espresso:
+            return "意式浓缩"
+        case .pourOver:
+            return "手冲"
+        case .capsule:
+            return "胶囊"
+        }
+    }
+
+    var accentHexName: String {
+        switch self {
+        case .espresso:
+            return "espresso"
+        case .pourOver:
+            return "pour-over"
+        case .capsule:
+            return "capsule"
+        }
+    }
+
+    var defaultBeansGrams: Double {
+        switch self {
+        case .espresso:
+            return 18
+        case .pourOver:
+            return 18
+        case .capsule:
+            return 6
+        }
+    }
+
+    var defaultWaterML: Double {
+        switch self {
+        case .espresso:
+            return 36
+        case .pourOver:
+            return 300
+        case .capsule:
+            return 40
+        }
+    }
+
+    var defaultRoast: RoastLevel {
+        switch self {
+        case .espresso:
+            return .medium
+        case .pourOver:
+            return .light
+        case .capsule:
+            return .medium
+        }
+    }
+
+    var defaultGrind: GrindLevel {
+        switch self {
+        case .espresso:
+            return .fine
+        case .pourOver:
+            return .medium
+        case .capsule:
+            return .standard
+        }
+    }
+
+    var extractionFactor: Double {
+        switch self {
+        case .espresso:
+            return 0.92
+        case .pourOver:
+            return 1.08
+        case .capsule:
+            return 0.82
+        }
+    }
+
+    var parameterLine: String {
+        switch self {
+        case .espresso:
+            return "9bar · 92°C"
+        case .pourOver:
+            return "92°C · 1:16"
+        case .capsule:
+            return "19bar · 88°C"
+        }
+    }
+}
+
+enum RoastLevel: String, Codable, Hashable, Sendable, CaseIterable, Identifiable {
+    case light
+    case medium
+    case dark
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .light:
+            return "浅度"
+        case .medium:
+            return "中度"
+        case .dark:
+            return "深度"
+        }
+    }
+
+    var factor: Double {
+        switch self {
+        case .light:
+            return 1.04
+        case .medium:
+            return 1.0
+        case .dark:
+            return 0.93
+        }
+    }
+}
+
+enum GrindLevel: String, Codable, Hashable, Sendable, CaseIterable, Identifiable {
+    case fine
+    case standard
+    case medium
+    case coarse
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .fine:
+            return "细"
+        case .standard:
+            return "标准"
+        case .medium:
+            return "中"
+        case .coarse:
+            return "粗"
+        }
+    }
+
+    var factor: Double {
+        switch self {
+        case .fine:
+            return 1.05
+        case .standard:
+            return 1.0
+        case .medium:
+            return 0.98
+        case .coarse:
+            return 0.93
+        }
+    }
+}
+
+struct CaffeineCalculatorInput: Hashable, Sendable {
+    var method: CalculatorBrewMethod
+    var beansGrams: Double
+    var waterML: Double
+    var roastLevel: RoastLevel
+    var grindLevel: GrindLevel
+
+    static func preset(for method: CalculatorBrewMethod) -> CaffeineCalculatorInput {
+        CaffeineCalculatorInput(
+            method: method,
+            beansGrams: method.defaultBeansGrams,
+            waterML: method.defaultWaterML,
+            roastLevel: method.defaultRoast,
+            grindLevel: method.defaultGrind
+        )
+    }
+}
+
+enum CaffeineCalculatorEstimator {
+    static func estimateMG(for input: CaffeineCalculatorInput) -> Int {
+        let basePerGram = 10.8
+        let waterRatio = max(input.waterML / max(input.method.defaultWaterML, 1), 0.55)
+        let waterFactor = min(max(pow(waterRatio, 0.18), 0.86), 1.16)
+        let estimate =
+            input.beansGrams
+            * basePerGram
+            * input.method.extractionFactor
+            * input.roastLevel.factor
+            * input.grindLevel.factor
+            * waterFactor
+
+        return Int(estimate.rounded())
+    }
+}
+
 struct BrewRecipeSummary: Codable, Hashable, Sendable {
     var method: BrewMethod
     var title: String
@@ -762,42 +958,6 @@ enum PreviewFixtures {
             servingOptions: [.init(id: "regular", name: "标准杯", volumeML: 320, multiplier: 1.0)]
         ),
         DrinkDefinitionSummary(
-            id: "jasmine-milk-tea",
-            name: "茉莉奶绿",
-            category: "奶茶",
-            brand: "霸王茶姬",
-            brandCollection: "东方茶饮",
-            tags: ["下午茶", "高糖", "品牌款"],
-            heroFlavor: "茉莉鲜奶",
-            preparationMethods: [.milkTea, .readyToDrink],
-            metrics: IngredientMetrics(caffeineMG: 55, sugarG: 28, caloriesKcal: 265, hydrationML: 480, volumeML: 500),
-            servingOptions: [.init(id: "half-sugar", name: "半糖", volumeML: 500, multiplier: 0.78)]
-        ),
-        DrinkDefinitionSummary(
-            id: "sparkling-water",
-            name: "青柠气泡水",
-            category: "气泡饮",
-            brand: "元气森林",
-            brandCollection: "轻负担补水",
-            tags: ["低糖", "补水", "即饮"],
-            heroFlavor: "青柠清爽",
-            preparationMethods: [.sparkling, .readyToDrink],
-            metrics: IngredientMetrics(caffeineMG: 0, sugarG: 1, caloriesKcal: 12, hydrationML: 330, volumeML: 330),
-            servingOptions: [.init(id: "can", name: "一听", volumeML: 330, multiplier: 1.0)]
-        ),
-        DrinkDefinitionSummary(
-            id: "energy-shot",
-            name: "能量饮料",
-            category: "功能饮料",
-            brand: "东鹏特饮",
-            brandCollection: "高刺激补能",
-            tags: ["加班", "高咖啡因", "即饮"],
-            heroFlavor: "高刺激提神",
-            preparationMethods: [.readyToDrink],
-            metrics: IngredientMetrics(caffeineMG: 180, sugarG: 24, caloriesKcal: 165, hydrationML: 250, volumeML: 250),
-            servingOptions: [.init(id: "bottle", name: "标准瓶", volumeML: 250, multiplier: 1.0)]
-        ),
-        DrinkDefinitionSummary(
             id: "pour-over-yirgacheffe",
             name: "耶加雪菲手冲",
             category: "手冲咖啡",
@@ -836,16 +996,28 @@ enum PreviewFixtures {
             servingOptions: [.init(id: "large", name: "大杯", volumeML: 380, multiplier: 1.0)]
         ),
         DrinkDefinitionSummary(
-            id: "dirty-latte",
-            name: "Dirty",
+            id: "luckin-coconut-latte",
+            name: "生椰拿铁",
             category: "咖啡",
-            brand: "Peet's",
-            brandCollection: "精品咖啡",
-            tags: ["奶咖", "意式机", "下午"],
-            heroFlavor: "浓缩奶香",
-            preparationMethods: [.espressoMachine],
-            metrics: IngredientMetrics(caffeineMG: 135, sugarG: 6, caloriesKcal: 120, hydrationML: 190, volumeML: 220),
-            servingOptions: [.init(id: "regular", name: "标准杯", volumeML: 220, multiplier: 1.0)]
+            brand: "瑞幸",
+            brandCollection: "日常通勤",
+            tags: ["椰乳", "奶咖", "高频"],
+            heroFlavor: "生椰奶香",
+            preparationMethods: [.espressoMachine, .readyToDrink],
+            metrics: IngredientMetrics(caffeineMG: 126, sugarG: 10, caloriesKcal: 168, hydrationML: 285, volumeML: 320),
+            servingOptions: [.init(id: "regular", name: "中杯", volumeML: 320, multiplier: 1.0)]
+        ),
+        DrinkDefinitionSummary(
+            id: "luckin-velvet-latte",
+            name: "丝绒拿铁",
+            category: "咖啡",
+            brand: "瑞幸",
+            brandCollection: "日常通勤",
+            tags: ["奶咖", "顺滑", "高频"],
+            heroFlavor: "奶香可可",
+            preparationMethods: [.espressoMachine, .readyToDrink],
+            metrics: IngredientMetrics(caffeineMG: 132, sugarG: 11, caloriesKcal: 182, hydrationML: 290, volumeML: 340),
+            servingOptions: [.init(id: "large", name: "大杯", volumeML: 340, multiplier: 1.0)]
         ),
         DrinkDefinitionSummary(
             id: "starbucks-flat-white",
@@ -860,64 +1032,28 @@ enum PreviewFixtures {
             servingOptions: [.init(id: "tall", name: "中杯", volumeML: 330, multiplier: 1.0)]
         ),
         DrinkDefinitionSummary(
-            id: "mstand-coconut-latte",
-            name: "生椰拿铁",
+            id: "starbucks-americano",
+            name: "美式咖啡",
             category: "咖啡",
-            brand: "M Stand",
-            brandCollection: "创意咖啡",
-            tags: ["椰乳", "奶咖", "高频"],
-            heroFlavor: "椰香奶咖",
+            brand: "星巴克",
+            brandCollection: "经典意式",
+            tags: ["黑咖", "意式机", "高频"],
+            heroFlavor: "坚果焦糖",
             preparationMethods: [.espressoMachine, .readyToDrink],
-            metrics: IngredientMetrics(caffeineMG: 125, sugarG: 10, caloriesKcal: 178, hydrationML: 280, volumeML: 360),
-            servingOptions: [.init(id: "regular", name: "标准杯", volumeML: 360, multiplier: 1.0)]
+            metrics: IngredientMetrics(caffeineMG: 150, sugarG: 0, caloriesKcal: 10, hydrationML: 340, volumeML: 355),
+            servingOptions: [.init(id: "tall", name: "中杯", volumeML: 355, multiplier: 1.0)]
         ),
         DrinkDefinitionSummary(
-            id: "bo-ya-jue-xian",
-            name: "伯牙绝弦",
-            category: "奶茶",
-            brand: "霸王茶姬",
-            brandCollection: "招牌奶茶",
-            tags: ["乌龙", "奶茶", "品牌款"],
-            heroFlavor: "茶香奶韵",
-            preparationMethods: [.milkTea, .readyToDrink],
-            metrics: IngredientMetrics(caffeineMG: 82, sugarG: 22, caloriesKcal: 240, hydrationML: 430, volumeML: 500),
-            servingOptions: [.init(id: "less-sugar", name: "少糖", volumeML: 500, multiplier: 0.9)]
-        ),
-        DrinkDefinitionSummary(
-            id: "grape-jasmine",
-            name: "多肉葡萄",
-            category: "奶茶",
-            brand: "喜茶",
-            brandCollection: "果茶",
-            tags: ["果茶", "高糖", "品牌款"],
-            heroFlavor: "葡萄茉莉",
-            preparationMethods: [.milkTea, .readyToDrink],
-            metrics: IngredientMetrics(caffeineMG: 28, sugarG: 26, caloriesKcal: 210, hydrationML: 420, volumeML: 500),
-            servingOptions: [.init(id: "regular", name: "标准杯", volumeML: 500, multiplier: 1.0)]
-        ),
-        DrinkDefinitionSummary(
-            id: "nayuki-dominant-orange",
-            name: "霸气橙子",
-            category: "奶茶",
-            brand: "奈雪",
-            brandCollection: "水果茶",
-            tags: ["果茶", "高频", "鲜果"],
-            heroFlavor: "橙香绿茶",
-            preparationMethods: [.milkTea, .readyToDrink],
-            metrics: IngredientMetrics(caffeineMG: 24, sugarG: 20, caloriesKcal: 168, hydrationML: 450, volumeML: 500),
-            servingOptions: [.init(id: "regular", name: "标准杯", volumeML: 500, multiplier: 1.0)]
-        ),
-        DrinkDefinitionSummary(
-            id: "coco-pearl-milk-tea",
-            name: "珍珠奶茶",
-            category: "奶茶",
-            brand: "CoCo",
-            brandCollection: "经典奶茶",
-            tags: ["奶茶", "珍珠", "高频"],
-            heroFlavor: "红茶奶香",
-            preparationMethods: [.milkTea, .readyToDrink],
-            metrics: IngredientMetrics(caffeineMG: 62, sugarG: 31, caloriesKcal: 290, hydrationML: 430, volumeML: 500),
-            servingOptions: [.init(id: "less-sugar", name: "少糖", volumeML: 500, multiplier: 0.9)]
+            id: "starbucks-shaken-oat-latte",
+            name: "冰摇浓缩燕麦拿铁",
+            category: "咖啡",
+            brand: "星巴克",
+            brandCollection: "经典意式",
+            tags: ["燕麦", "冰咖", "奶咖"],
+            heroFlavor: "燕麦焦糖",
+            preparationMethods: [.espressoMachine, .readyToDrink],
+            metrics: IngredientMetrics(caffeineMG: 145, sugarG: 9, caloriesKcal: 148, hydrationML: 285, volumeML: 350),
+            servingOptions: [.init(id: "grande", name: "大杯", volumeML: 350, multiplier: 1.0)]
         ),
         DrinkDefinitionSummary(
             id: "cotti-coconut-latte",
@@ -932,63 +1068,135 @@ enum PreviewFixtures {
             servingOptions: [.init(id: "regular", name: "标准杯", volumeML: 360, multiplier: 1.0)]
         ),
         DrinkDefinitionSummary(
-            id: "luckin-thick-milk-latte",
-            name: "厚乳拿铁",
+            id: "cotti-orange-americano",
+            name: "橙C美式",
             category: "咖啡",
-            brand: "幸运咖",
-            brandCollection: "日常咖啡",
-            tags: ["奶咖", "高频", "厚乳"],
-            heroFlavor: "浓奶甜感",
+            brand: "库迪",
+            brandCollection: "日常通勤",
+            tags: ["果咖", "美式", "高频"],
+            heroFlavor: "橙香黑咖",
             preparationMethods: [.espressoMachine, .readyToDrink],
-            metrics: IngredientMetrics(caffeineMG: 116, sugarG: 13, caloriesKcal: 176, hydrationML: 270, volumeML: 340),
-            servingOptions: [.init(id: "regular", name: "标准杯", volumeML: 340, multiplier: 1.0)]
+            metrics: IngredientMetrics(caffeineMG: 136, sugarG: 6, caloriesKcal: 84, hydrationML: 320, volumeML: 420),
+            servingOptions: [.init(id: "large", name: "大杯", volumeML: 420, multiplier: 1.0)]
         ),
         DrinkDefinitionSummary(
-            id: "seesaw-chocolate-americano",
-            name: "黑巧美式",
+            id: "cotti-latte",
+            name: "拿铁",
             category: "咖啡",
-            brand: "Seesaw",
-            brandCollection: "城市咖啡",
-            tags: ["美式", "创意咖啡", "可可"],
-            heroFlavor: "黑巧可可",
-            preparationMethods: [.espressoMachine],
-            metrics: IngredientMetrics(caffeineMG: 142, sugarG: 5, caloriesKcal: 56, hydrationML: 300, volumeML: 360),
-            servingOptions: [.init(id: "large", name: "大杯", volumeML: 360, multiplier: 1.0)]
+            brand: "库迪",
+            brandCollection: "日常通勤",
+            tags: ["奶咖", "通勤", "基础款"],
+            heroFlavor: "牛奶坚果",
+            preparationMethods: [.espressoMachine, .readyToDrink],
+            metrics: IngredientMetrics(caffeineMG: 122, sugarG: 8, caloriesKcal: 146, hydrationML: 270, volumeML: 320),
+            servingOptions: [.init(id: "regular", name: "中杯", volumeML: 320, multiplier: 1.0)]
         ),
         DrinkDefinitionSummary(
-            id: "chabaidao-yuqilin",
-            name: "豆乳玉麒麟",
+            id: "bo-ya-jue-xian",
+            name: "伯牙绝弦",
             category: "奶茶",
-            brand: "茶百道",
+            brand: "霸王茶姬",
             brandCollection: "招牌奶茶",
-            tags: ["豆乳", "乌龙", "高频"],
-            heroFlavor: "豆乳乌龙",
+            tags: ["乌龙", "奶茶", "品牌款"],
+            heroFlavor: "茶香奶韵",
             preparationMethods: [.milkTea, .readyToDrink],
-            metrics: IngredientMetrics(caffeineMG: 64, sugarG: 24, caloriesKcal: 238, hydrationML: 420, volumeML: 500),
-            servingOptions: [.init(id: "less-sugar", name: "少糖", volumeML: 500, multiplier: 0.88)]
+            metrics: IngredientMetrics(caffeineMG: 82, sugarG: 22, caloriesKcal: 240, hydrationML: 430, volumeML: 500),
+            servingOptions: [.init(id: "less-sugar", name: "少糖", volumeML: 500, multiplier: 0.9)]
         ),
         DrinkDefinitionSummary(
-            id: "guming-cheese-grape",
-            name: "超A芝士葡萄",
+            id: "chagee-flower-oolong",
+            name: "花田乌龙",
             category: "奶茶",
-            brand: "古茗",
-            brandCollection: "果茶",
-            tags: ["果茶", "芝士", "鲜果"],
-            heroFlavor: "葡萄芝士",
+            brand: "霸王茶姬",
+            brandCollection: "东方茶饮",
+            tags: ["乌龙", "轻乳", "高频"],
+            heroFlavor: "花香乌龙",
             preparationMethods: [.milkTea, .readyToDrink],
-            metrics: IngredientMetrics(caffeineMG: 26, sugarG: 25, caloriesKcal: 214, hydrationML: 435, volumeML: 500),
+            metrics: IngredientMetrics(caffeineMG: 66, sugarG: 20, caloriesKcal: 198, hydrationML: 438, volumeML: 500),
             servingOptions: [.init(id: "regular", name: "标准杯", volumeML: 500, multiplier: 1.0)]
         ),
         DrinkDefinitionSummary(
-            id: "hushang-yangzhi",
-            name: "杨枝甘露",
+            id: "chagee-white-mist",
+            name: "白雾红尘",
             category: "奶茶",
-            brand: "沪上阿姨",
-            brandCollection: "水果乳饮",
-            tags: ["芒果", "西米", "高频"],
-            heroFlavor: "芒果西柚",
+            brand: "霸王茶姬",
+            brandCollection: "东方茶饮",
+            tags: ["红茶", "奶茶", "丝滑"],
+            heroFlavor: "红茶奶香",
             preparationMethods: [.milkTea, .readyToDrink],
-            metrics: IngredientMetrics(caffeineMG: 18, sugarG: 29, caloriesKcal: 260, hydrationML: 410, volumeML: 500),
+            metrics: IngredientMetrics(caffeineMG: 60, sugarG: 23, caloriesKcal: 212, hydrationML: 430, volumeML: 500),
+            servingOptions: [.init(id: "less-sugar", name: "少糖", volumeML: 500, multiplier: 0.88)]
+        ),
+        DrinkDefinitionSummary(
+            id: "grape-jasmine",
+            name: "多肉葡萄",
+            category: "果茶",
+            brand: "喜茶",
+            brandCollection: "果茶",
+            tags: ["果茶", "高频", "品牌款"],
+            heroFlavor: "葡萄茉莉",
+            preparationMethods: [.milkTea, .readyToDrink],
+            metrics: IngredientMetrics(caffeineMG: 28, sugarG: 26, caloriesKcal: 210, hydrationML: 420, volumeML: 500),
+            servingOptions: [.init(id: "regular", name: "标准杯", volumeML: 500, multiplier: 1.0)]
+        ),
+        DrinkDefinitionSummary(
+            id: "heytea-cheese-grape",
+            name: "轻芝多肉葡萄",
+            category: "果茶",
+            brand: "喜茶",
+            brandCollection: "果茶",
+            tags: ["芝士", "葡萄", "高频"],
+            heroFlavor: "葡萄芝香",
+            preparationMethods: [.milkTea, .readyToDrink],
+            metrics: IngredientMetrics(caffeineMG: 30, sugarG: 24, caloriesKcal: 228, hydrationML: 415, volumeML: 500),
+            servingOptions: [.init(id: "regular", name: "标准杯", volumeML: 500, multiplier: 1.0)]
+        ),
+        DrinkDefinitionSummary(
+            id: "heytea-black-sugar-bobo",
+            name: "烤黑糖波波牛乳",
+            category: "奶茶",
+            brand: "喜茶",
+            brandCollection: "经典奶茶",
+            tags: ["黑糖", "波波", "牛乳"],
+            heroFlavor: "黑糖焦香",
+            preparationMethods: [.milkTea, .readyToDrink],
+            metrics: IngredientMetrics(caffeineMG: 36, sugarG: 31, caloriesKcal: 286, hydrationML: 388, volumeML: 500),
+            servingOptions: [.init(id: "regular", name: "标准杯", volumeML: 500, multiplier: 1.0)]
+        ),
+        DrinkDefinitionSummary(
+            id: "alittle-boba-milk-tea",
+            name: "波霸奶茶",
+            category: "奶茶",
+            brand: "一点点",
+            brandCollection: "经典奶茶",
+            tags: ["珍珠", "奶茶", "高频"],
+            heroFlavor: "红茶奶香",
+            preparationMethods: [.milkTea, .readyToDrink],
+            metrics: IngredientMetrics(caffeineMG: 54, sugarG: 32, caloriesKcal: 298, hydrationML: 400, volumeML: 500),
+            servingOptions: [.init(id: "regular", name: "标准杯", volumeML: 500, multiplier: 1.0)]
+        ),
+        DrinkDefinitionSummary(
+            id: "alittle-four-season-macchiato",
+            name: "四季春玛奇朵",
+            category: "奶茶",
+            brand: "一点点",
+            brandCollection: "清爽茶乳",
+            tags: ["四季春", "奶盖", "高频"],
+            heroFlavor: "奶盖青茶",
+            preparationMethods: [.milkTea, .readyToDrink],
+            metrics: IngredientMetrics(caffeineMG: 46, sugarG: 20, caloriesKcal: 176, hydrationML: 430, volumeML: 500),
+            servingOptions: [.init(id: "less-sugar", name: "少糖", volumeML: 500, multiplier: 0.88)]
+        ),
+        DrinkDefinitionSummary(
+            id: "alittle-oolong-milk-tea",
+            name: "乌龙奶茶",
+            category: "奶茶",
+            brand: "一点点",
+            brandCollection: "经典奶茶",
+            tags: ["乌龙", "奶茶", "经典"],
+            heroFlavor: "焙香乌龙",
+            preparationMethods: [.milkTea, .readyToDrink],
+            metrics: IngredientMetrics(caffeineMG: 58, sugarG: 26, caloriesKcal: 232, hydrationML: 418, volumeML: 500),
             servingOptions: [.init(id: "regular", name: "标准杯", volumeML: 500, multiplier: 1.0)]
         ),
     ]
