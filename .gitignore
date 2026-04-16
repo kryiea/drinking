@@ -4,6 +4,7 @@
 .venv/
 .data/
 DerivedData/
+.derivedData/
 Pods/
 *.xcworkspace
 xcuserdata/
@@ -12,5 +13,6 @@ xcuserdata/
 backend/.pytest_cache/
 backend/.coverage
 backend/.env
+backend/dev.db
 backend/*.egg-info/
 infra/.env

@@ -5,6 +5,7 @@
 - `swift test`
 - `xcodebuild -project ios/Yinzhi.xcodeproj -scheme Yinzhi -destination 'platform=iOS Simulator,id=<simulator-id>' build`
 - 文档索引检查: `docs/README.md`、`openspec/README.md`、`agent.md` 是否同步更新，OpenSpec 变更是否齐全
+- README 截图检查: `README.md` 中的页面与关键功能截图是否与当前 App 状态一致
 
 ## 环境受限项
 - iOS UI 测试与截图回归
@@ -22,6 +23,7 @@
 - 首页、记录页、分析页、我的页的滚动内容都不能让关键 CTA 或关键解释长期被 tab chrome 截断
 - 图片识别链路必须本地完成 OCR，并在无法匹配目录时给出可继续搜索的关键词回退
 - 记录页首屏必须优先呈现快速操作，而不是让用户先读解释性长文案
+- 记录页品牌筛选必须优先靠小 logo 识别，而不是重新退化成重文字 tab
 - 新阶段实施时，用户侧首页和记录页不得继续出现 AI 推荐主叙事
 - onboarding 不得再把 AI 推荐或开放式建议作为核心卖点
 - 我的页不得让未来路线型文案压过已可用的个人设置和数据动作
@@ -29,3 +31,4 @@
 - 语音输入必须经过结构化确认步骤，不能直接把自由文本写成最终记录
 - iCloud 同步与本地数据访问必须通过明确抽象隔离，避免把 CloudKit 逻辑散落到页面层
 - 同步快照 round-trip 不能丢失品牌、冲煮方式、个人设置或个人饮品模板字段
+- 浅色 / 深色模式下的关键阈值标记、主要 CTA 和记录入口不能出现不可读的低对比状态

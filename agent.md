@@ -46,6 +46,10 @@
 - `openspec/changes/hicoffee-quick-capture/`
 - `openspec/changes/mvp-experience-polish/`
 - `openspec/changes/home-and-log-density-reset/`
+- `openspec/changes/home-glance-redesign/`
+- `openspec/changes/record-selector-and-calculator-refresh/`
+- `openspec/changes/contrast-illustration-and-appearance/`
+- `openspec/changes/log-brand-catalog-and-contrast-polish/`
 - `openspec/changes/catalog-depth-and-template-management/`
 
 ### 文档治理
@@ -66,10 +70,13 @@
 - Liquid Glass 只用于高价值表面，必须保留旧系统 fallback
 
 ## 当前体验结论
-- 首页：只保留当前体内咖啡因、入睡残留和 `记一杯`
-- 记录：上方是记录入口，下方是品牌目录；目录饮品为横条 row；已增加咖啡因计算器二级页面
+- 首页：固定为“状态主卡 + 从现在到入睡的紧凑时间视图 + 底部浮动 `记一杯`”
+- 记录：已经收口为“搜索 + 快速入口 + 品牌小 logo rail + 最近 / 我的饮品 / 目录 row”；目录饮品以极简横条 row 为主，品牌识别优先交给 logo，优先支持选中就记
+- 咖啡因计算器：已改为工具页，首屏先展示冲煮方式和估算值，再通过参数卡微调，并支持直接复制结果或存为我的饮品；三种主插图必须在浅色 / 深色下都保持高辨识度
 - 分析：收口为咖啡因时间视图，不再让糖分 / 补水等次要结构抢主位
 - 我的：改为多级列表设置，具体设置与数据动作下沉到二级页面
+- 外观：设计系统默认跟随系统浅色 / 深色模式，首页关键指标和时间图标签必须保持可读，对比度问题优先于装饰性染色
+- Starter pack：默认预置 `瑞幸`、`星巴克`、`库迪`、`喜茶`、`霸王茶姬`、`一点点` 的代表饮品，避免首次进入就面对空目录或演示型品牌
 
 ## 验证状态
 - 已通过：
@@ -94,6 +101,6 @@
 ## 下一步任务
 1. 完成 iCloud 真同步验收，明确是否升级到更完整的 CloudKit 容器方案
 2. 继续打磨记录页品牌目录、语音 parser 和图片识别命中率
-3. 在当前离线结构上补截图回归、视觉细节和微交互
+3. 在当前离线结构上补记录页和分析页的截图回归、视觉细节和微交互
 4. 规划并实现 Widget 与 Watch app 的最小可用目标
 5. Apple 路线稳定后，再单开 HarmonyOS 适配研究

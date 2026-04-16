@@ -26,6 +26,10 @@ OpenSpec 记录的是“为什么发生这次变更、怎么设计、做了什�
 - `hicoffee-quick-capture`
 - `mvp-experience-polish`
 - `home-and-log-density-reset`
+- `home-glance-redesign`
+- `record-selector-and-calculator-refresh`
+- `contrast-illustration-and-appearance`
+- `log-brand-catalog-and-contrast-polish`
 - `catalog-depth-and-template-management`
 
 ### 4. 文档治理
@@ -54,3 +58,4 @@ OpenSpec 记录的是“为什么发生这次变更、怎么设计、做了什�
 ## 维护约定
 - 新的重大方向变化，优先新增 change，不要直接改历史 change 伪装成一直如此
 - 历史 change 可以保留，但应通过导航文档说明它是否仍然代表当前方向
+- 如果某次迭代只是对现有方向做细化，优先补齐已有 change 和长期文档，不再额外制造重复的说明文件

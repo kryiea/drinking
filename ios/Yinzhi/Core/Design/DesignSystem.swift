@@ -1,18 +1,81 @@
 import SwiftUI
+import UIKit
 
 enum AppTheme {
-    static let backgroundTop = Color(red: 0.96, green: 0.99, blue: 0.97)
-    static let backgroundBottom = Color(red: 0.88, green: 0.95, blue: 0.92)
-    static let accent = Color(red: 0.08, green: 0.50, blue: 0.38)
-    static let accentSoft = Color(red: 0.59, green: 0.82, blue: 0.72)
-    static let cardTint = Color.white.opacity(0.12)
-    static let ink = Color(red: 0.10, green: 0.17, blue: 0.15)
+    static let backgroundTop = dynamicColor(
+        light: UIColor(red: 0.96, green: 0.99, blue: 0.97, alpha: 1),
+        dark: UIColor(red: 0.06, green: 0.08, blue: 0.09, alpha: 1)
+    )
+    static let backgroundBottom = dynamicColor(
+        light: UIColor(red: 0.88, green: 0.95, blue: 0.92, alpha: 1),
+        dark: UIColor(red: 0.08, green: 0.12, blue: 0.12, alpha: 1)
+    )
+    static let accent = dynamicColor(
+        light: UIColor(red: 0.08, green: 0.50, blue: 0.38, alpha: 1),
+        dark: UIColor(red: 0.29, green: 0.74, blue: 0.61, alpha: 1)
+    )
+    static let accentSoft = dynamicColor(
+        light: UIColor(red: 0.59, green: 0.82, blue: 0.72, alpha: 1),
+        dark: UIColor(red: 0.18, green: 0.36, blue: 0.31, alpha: 1)
+    )
+    static let cardTint = dynamicColor(
+        light: UIColor.white.withAlphaComponent(0.12),
+        dark: UIColor.white.withAlphaComponent(0.11)
+    )
+    static let ink = dynamicColor(
+        light: UIColor(red: 0.10, green: 0.17, blue: 0.15, alpha: 1),
+        dark: UIColor(red: 0.94, green: 0.97, blue: 0.95, alpha: 1)
+    )
+    static let elevatedSurface = dynamicColor(
+        light: UIColor.white.withAlphaComponent(0.88),
+        dark: UIColor(red: 0.12, green: 0.16, blue: 0.17, alpha: 0.95)
+    )
+    static let panelSurface = dynamicColor(
+        light: UIColor.white.withAlphaComponent(0.78),
+        dark: UIColor(red: 0.13, green: 0.18, blue: 0.19, alpha: 0.92)
+    )
+    static let glassStroke = dynamicColor(
+        light: UIColor.white.withAlphaComponent(0.35),
+        dark: UIColor.white.withAlphaComponent(0.16)
+    )
+    static let outline = dynamicColor(
+        light: UIColor.white.withAlphaComponent(0.70),
+        dark: UIColor.white.withAlphaComponent(0.18)
+    )
+    static let softFill = dynamicColor(
+        light: UIColor.black.withAlphaComponent(0.05),
+        dark: UIColor.white.withAlphaComponent(0.10)
+    )
+    static let ambientCloud = dynamicColor(
+        light: UIColor.white.withAlphaComponent(0.48),
+        dark: UIColor.white.withAlphaComponent(0.06)
+    )
+    static let chartSurface = dynamicColor(
+        light: UIColor.white.withAlphaComponent(0.30),
+        dark: UIColor.white.withAlphaComponent(0.10)
+    )
+    static let chartRule = dynamicColor(
+        light: UIColor.white.withAlphaComponent(0.45),
+        dark: UIColor.white.withAlphaComponent(0.18)
+    )
+    static let shadow = dynamicColor(
+        light: UIColor.black.withAlphaComponent(0.08),
+        dark: UIColor.black.withAlphaComponent(0.32)
+    )
 
     static let pageBackground = LinearGradient(
         colors: [backgroundTop, backgroundBottom],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
     )
+
+    private static func dynamicColor(light: UIColor, dark: UIColor) -> Color {
+        Color(
+            uiColor: UIColor { traits in
+                traits.userInterfaceStyle == .dark ? dark : light
+            }
+        )
+    }
 }
 
 struct AdaptiveGlassCardModifier: ViewModifier {
@@ -33,7 +96,7 @@ struct AdaptiveGlassCardModifier: ViewModifier {
                 .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                        .stroke(Color.white.opacity(0.35), lineWidth: 1)
+                        .stroke(AppTheme.glassStroke, lineWidth: 1)
                 )
         }
     }

@@ -20,7 +20,7 @@ def test_catalog_search_returns_seed_data(client: TestClient) -> None:
     response = client.get("/v1/drink-definitions", params={"q": "奶"})
     assert response.status_code == 200
     payload = response.json()
-    assert any(item["id"] == "jasmine-milk-tea" for item in payload)
+    assert any(item["id"] == "alittle-boba-milk-tea" for item in payload)
     assert any(item["brand"] == "MANNER" for item in client.get("/v1/drink-definitions", params={"brand": "MANNER"}).json())
 
 
@@ -44,7 +44,7 @@ def test_log_insights_and_recommendations_round_trip(client: TestClient) -> None
     create_response = client.post(
         "/v1/drink-logs",
         json={
-            "drink_definition_id": "energy-shot",
+            "drink_definition_id": "americano-iced",
             "consumed_at": datetime(2026, 4, 13, 14, 30).isoformat(),
             "ratio": 1.0,
             "source": "catalog",
@@ -61,7 +61,7 @@ def test_log_insights_and_recommendations_round_trip(client: TestClient) -> None
     assert insights.status_code == 200
     insights_payload = insights.json()
     assert insights_payload["entries_count"] >= 1
-    assert insights_payload["totals"]["caffeine_mg"] >= 180
+    assert insights_payload["totals"]["caffeine_mg"] >= 140
 
     recommendations = client.get(
         "/v1/recommendations",

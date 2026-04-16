@@ -43,33 +43,57 @@ struct LogView: View {
     @State private var quickCaptureResult: QuickCaptureRecognitionResult?
 
     var body: some View {
-        ScrollView {
+        ScrollView(showsIndicators: false) {
             VStack(alignment: .leading, spacing: 18) {
-                commandDeck
+                recordHeader
+                selectorSearchField
+                quickActionStrip
+                scopePicker
 
-                if let feedback = successFeedback {
-                    nextStepRail(feedback: feedback)
+                if selectedDirectoryScope != .mine, scopedBrandOptions.isEmpty == false {
+                    brandCircleRail
                 }
 
-                if recentLoggedEntries.isEmpty == false {
-                    recentLoggedStrip
-                }
+                if hasQuery {
+                    selectorDrinkSection(
+                        title: "搜索结果",
+                        subtitle: "直接点一行就能记录",
+                        drinks: filteredCatalog,
+                        showsManageAction: false
+                    )
+                } else {
+                    if recentLoggedEntries.isEmpty == false {
+                        recentSelectorSection
+                    }
 
-                directoryPicker
+                    if selectedDirectoryScope != .mine, featuredPersonalDrinks.isEmpty == false {
+                        selectorDrinkSection(
+                            title: "我的饮品",
+                            subtitle: "自己常喝的几杯放在前面",
+                            drinks: featuredPersonalDrinks,
+                            showsManageAction: true
+                        )
+                    }
+
+                    selectorDrinkSection(
+                        title: directoryTitle,
+                        subtitle: directorySubtitle,
+                        drinks: directoryDrinks,
+                        showsManageAction: selectedDirectoryScope == .mine
+                    )
+                }
 
                 if let brewDrink = activeBrewDrink, let recipe = brewDrink.brewRecipe {
                     brewLab(drink: brewDrink, recipe: recipe)
                 }
-
-                directorySection
             }
             .padding(16)
             .padding(.bottom, 112)
         }
-        .navigationTitle("记录")
-        .searchable(text: $query, prompt: "搜品牌、饮品或口味")
+        .background(recordPageBackground.ignoresSafeArea())
+        .toolbar(.hidden, for: .navigationBar)
         .navigationDestination(isPresented: $isPresentingCalculator) {
-            CaffeineCalculatorView()
+            CaffeineCalculatorView(environment: environment)
         }
         .task(id: query) {
             try? await Task.sleep(for: .milliseconds(250))
@@ -150,6 +174,228 @@ struct LogView: View {
         }
         .sheet(isPresented: $isPresentingManageTemplates) {
             ManageDrinkTemplatesSheet(environment: environment)
+        }
+    }
+
+    private var recordHeader: some View {
+        HStack(alignment: .top) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("记一杯")
+                    .font(.system(size: 34, weight: .bold, design: .rounded))
+                    .foregroundStyle(AppTheme.ink)
+                Text("搜到就记，不先读说明。")
+                    .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                    .foregroundStyle(.secondary)
+            }
+
+            Spacer()
+
+            StatusChip(
+                label: statusLabel,
+                systemImage: statusSymbol,
+                tint: statusTint.opacity(0.16)
+            )
+        }
+    }
+
+    private var selectorSearchField: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "magnifyingglass")
+                .font(.system(size: 18, weight: .bold))
+                .foregroundStyle(.secondary)
+
+            TextField("搜索品牌、饮品或口味", text: $query)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+                .font(.system(.headline, design: .rounded, weight: .semibold))
+
+            if hasQuery {
+                Button {
+                    query = ""
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 18, weight: .bold))
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal, 18)
+        .padding(.vertical, 16)
+        .background(AppTheme.elevatedSurface, in: Capsule())
+        .shadow(color: AppTheme.shadow, radius: 12, y: 6)
+    }
+
+    private var quickActionStrip: some View {
+        let libraryTitle = isRecognizingQuickCapture ? "识别中" : "相册"
+
+        return ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 10) {
+                quickActionButton(
+                    title: "语音",
+                    systemImage: "waveform.circle.fill",
+                    tint: AppTheme.accent
+                ) {
+                    isPresentingVoiceCapture = true
+                }
+
+                quickActionButton(
+                    title: "拍照",
+                    systemImage: "camera.viewfinder",
+                    tint: Color(red: 0.38, green: 0.58, blue: 0.47)
+                ) {
+                    openCamera()
+                }
+
+                PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
+                    QuickActionPill(
+                        title: libraryTitle,
+                        systemImage: "photo.on.rectangle.angled",
+                        tint: Color(red: 0.24, green: 0.50, blue: 0.82)
+                    )
+                }
+                .buttonStyle(.plain)
+                .disabled(isRecognizingQuickCapture || environment.isRecordingDrink)
+
+                quickActionButton(
+                    title: "计算器",
+                    systemImage: "dial.medium",
+                    tint: Color(red: 0.81, green: 0.49, blue: 0.20)
+                ) {
+                    isPresentingCalculator = true
+                }
+
+                if let recentQuickDrink {
+                    Button {
+                        record(recentQuickDrink)
+                    } label: {
+                        QuickActionPill(
+                            title: "再来一杯",
+                            systemImage: "arrow.clockwise.circle.fill",
+                            tint: AppTheme.accent
+                        )
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(environment.isRecordingDrink)
+                }
+            }
+            .padding(.vertical, 2)
+        }
+    }
+
+    private var scopePicker: some View {
+        HStack(spacing: 10) {
+            ForEach(DirectoryScope.allCases) { scope in
+                FilterChip(label: scope.title, isSelected: selectedDirectoryScope == scope) {
+                    selectedDirectoryScope = scope
+                    reconcileSelection()
+                }
+            }
+        }
+    }
+
+    private var brandCircleRail: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 12) {
+                ForEach(scopedBrandOptions, id: \.self) { brand in
+                    BrandCircleChip(
+                        brand: brand,
+                        isSelected: selectedBrand == brand
+                    ) {
+                        selectedBrand = brand
+                        reconcileSelection()
+                    }
+                }
+            }
+            .padding(.vertical, 2)
+        }
+    }
+
+    private var recentSelectorSection: some View {
+        SelectorSectionCard(title: "最近", subtitle: "从今天和最近常点里继续") {
+            VStack(spacing: 0) {
+                ForEach(Array(recentLoggedEntries.enumerated()), id: \.element.id) { index, entry in
+                    Button {
+                        if let drink = drinkDefinition(for: entry) {
+                            record(drink)
+                        }
+                    } label: {
+                        SelectorRecentRow(entry: entry)
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(drinkDefinition(for: entry) == nil || environment.isRecordingDrink)
+
+                    if index != recentLoggedEntries.count - 1 {
+                        Divider()
+                            .padding(.leading, 68)
+                    }
+                }
+            }
+        }
+    }
+
+    private func selectorDrinkSection(
+        title: String,
+        subtitle: String,
+        drinks: [DrinkDefinitionSummary],
+        showsManageAction: Bool
+    ) -> some View {
+        SelectorSectionCard(
+            title: title,
+            subtitle: drinks.isEmpty ? "当前还没有可选内容" : subtitle,
+            actionTitle: showsManageAction ? "管理" : nil,
+            action: showsManageAction ? { isPresentingManageTemplates = true } : nil
+        ) {
+            if drinks.isEmpty {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text(selectedDirectoryScope == .mine ? "先新增 1 个自己的饮品，后面就能一直复用。" : "换个品牌、分类或关键词再试试。")
+                        .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                        .foregroundStyle(.secondary)
+
+                    if selectedDirectoryScope == .mine {
+                        Button("新增我的饮品") {
+                            isPresentingAddTemplate = true
+                        }
+                        .buttonStyle(SecondaryGlassButtonStyle())
+                    }
+                }
+            } else {
+                VStack(spacing: 0) {
+                    ForEach(Array(drinks.enumerated()), id: \.element.id) { index, drink in
+                        SelectorDrinkRow(
+                            drink: drink,
+                            isRecording: environment.isRecordingDrink,
+                            onRecord: { record(drink) },
+                            onOpenBrew: drink.brewRecipe == nil ? nil : { openBrew(drink) }
+                        )
+
+                        if index != drinks.count - 1 {
+                            Divider()
+                                .padding(.leading, 68)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private var hasQuery: Bool {
+        query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
+    }
+
+    private var featuredPersonalDrinks: [DrinkDefinitionSummary] {
+        Array(personalDrinks.prefix(4))
+    }
+
+    private var recordPageBackground: some View {
+        ZStack {
+            AppTheme.pageBackground
+
+            Circle()
+                .fill(AppTheme.ambientCloud.opacity(0.92))
+                .frame(width: 280, height: 280)
+                .blur(radius: 68)
+                .offset(x: -130, y: -220)
         }
     }
 
@@ -657,6 +903,17 @@ struct LogView: View {
 
             return brandMatches && queryMatches
         }
+        .sorted { lhs, rhs in
+            let lhsRank = brandPriority(for: lhs.brand)
+            let rhsRank = brandPriority(for: rhs.brand)
+            if lhsRank != rhsRank {
+                return lhsRank < rhsRank
+            }
+            if lhs.brand != rhs.brand {
+                return lhs.brand.localizedCompare(rhs.brand) == .orderedAscending
+            }
+            return lhs.name.localizedCompare(rhs.name) == .orderedAscending
+        }
     }
 
     private var scopedBrandOptions: [String] {
@@ -664,7 +921,14 @@ struct LogView: View {
             .map(\.brand)
             .filter { $0.isEmpty == false }
 
-        return ["全部"] + Array(Set(brands)).sorted()
+        return ["全部"] + Array(Set(brands)).sorted { lhs, rhs in
+            let lhsRank = brandPriority(for: lhs)
+            let rhsRank = brandPriority(for: rhs)
+            if lhsRank != rhsRank {
+                return lhsRank < rhsRank
+            }
+            return lhs.localizedCompare(rhs) == .orderedAscending
+        }
     }
 
     private var scopedBrandSource: [DrinkDefinitionSummary] {
@@ -828,6 +1092,565 @@ struct LogView: View {
     private func errorToast(_ message: String) {
         environment.errorMessage = message
     }
+
+    private func brandPriority(for brand: String) -> Int {
+        let priorities: [String]
+        switch selectedDirectoryScope {
+        case .coffee:
+            priorities = ["瑞幸", "星巴克", "库迪", "MANNER", "Blue Bottle", "Peet's", "M Stand", "Seesaw"]
+        case .milkTea:
+            priorities = ["喜茶", "霸王茶姬", "一点点", "奈雪", "茶百道", "古茗", "沪上阿姨"]
+        case .mine:
+            priorities = []
+        }
+
+        if let index = priorities.firstIndex(of: brand) {
+            return index
+        }
+        return priorities.count + 20
+    }
+}
+
+private struct QuickActionPill: View {
+    let title: String
+    let systemImage: String
+    let tint: Color
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: systemImage)
+                .font(.system(size: 14, weight: .bold))
+            Text(title)
+                .font(.system(.caption, design: .rounded, weight: .bold))
+                .lineLimit(1)
+        }
+        .foregroundStyle(AppTheme.ink)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+        .background(tint.opacity(0.12), in: Capsule())
+        .overlay(
+            Capsule()
+                .stroke(tint.opacity(0.16), lineWidth: 1)
+        )
+    }
+}
+
+private struct BrandVisual {
+    let fill: Color
+    let foreground: Color
+    let accent: Color
+    let kind: Kind
+
+    enum Kind {
+        case all
+        case luckin
+        case starbucks
+        case cotti
+        case heytea
+        case chagee
+        case alittle
+        case blueBottle
+        case letter(String)
+    }
+
+    static func forBrand(_ brand: String) -> BrandVisual {
+        switch brand {
+        case "全部":
+            return BrandVisual(
+                fill: AppTheme.accent.opacity(0.16),
+                foreground: AppTheme.accent,
+                accent: AppTheme.accent,
+                kind: .all
+            )
+        case "瑞幸":
+            return BrandVisual(
+                fill: Color(red: 0.16, green: 0.29, blue: 0.80),
+                foreground: .white,
+                accent: Color(red: 0.16, green: 0.29, blue: 0.80),
+                kind: .luckin
+            )
+        case "星巴克":
+            return BrandVisual(
+                fill: Color(red: 0.05, green: 0.42, blue: 0.31),
+                foreground: .white,
+                accent: Color(red: 0.05, green: 0.42, blue: 0.31),
+                kind: .starbucks
+            )
+        case "库迪":
+            return BrandVisual(
+                fill: Color(red: 0.10, green: 0.11, blue: 0.14),
+                foreground: Color(red: 0.96, green: 0.60, blue: 0.20),
+                accent: Color(red: 0.96, green: 0.60, blue: 0.20),
+                kind: .cotti
+            )
+        case "喜茶":
+            return BrandVisual(
+                fill: Color(red: 0.09, green: 0.09, blue: 0.10),
+                foreground: .white,
+                accent: Color(red: 0.09, green: 0.09, blue: 0.10),
+                kind: .heytea
+            )
+        case "霸王茶姬":
+            return BrandVisual(
+                fill: Color(red: 0.80, green: 0.23, blue: 0.18),
+                foreground: .white,
+                accent: Color(red: 0.80, green: 0.23, blue: 0.18),
+                kind: .chagee
+            )
+        case "一点点":
+            return BrandVisual(
+                fill: Color(red: 0.89, green: 0.26, blue: 0.22),
+                foreground: .white,
+                accent: Color(red: 0.89, green: 0.26, blue: 0.22),
+                kind: .alittle
+            )
+        case "Blue Bottle":
+            return BrandVisual(
+                fill: Color(red: 0.13, green: 0.44, blue: 0.93),
+                foreground: .white,
+                accent: Color(red: 0.13, green: 0.44, blue: 0.93),
+                kind: .blueBottle
+            )
+        case "MANNER":
+            return BrandVisual(
+                fill: Color(red: 0.13, green: 0.13, blue: 0.15),
+                foreground: .white,
+                accent: Color(red: 0.13, green: 0.13, blue: 0.15),
+                kind: .letter("M")
+            )
+        case "M Stand":
+            return BrandVisual(
+                fill: Color(red: 0.15, green: 0.15, blue: 0.17),
+                foreground: .white,
+                accent: Color(red: 0.15, green: 0.15, blue: 0.17),
+                kind: .letter("M")
+            )
+        case "Peet's":
+            return BrandVisual(
+                fill: Color(red: 0.18, green: 0.12, blue: 0.10),
+                foreground: .white,
+                accent: Color(red: 0.18, green: 0.12, blue: 0.10),
+                kind: .letter("P")
+            )
+        case "Seesaw":
+            return BrandVisual(
+                fill: Color(red: 0.21, green: 0.20, blue: 0.18),
+                foreground: .white,
+                accent: Color(red: 0.21, green: 0.20, blue: 0.18),
+                kind: .letter("S")
+            )
+        default:
+            let fallback = brand.trimmingCharacters(in: .whitespacesAndNewlines).first.map { String($0).uppercased() } ?? "?"
+            return BrandVisual(
+                fill: AppTheme.accent.opacity(0.16),
+                foreground: AppTheme.accent,
+                accent: AppTheme.accent,
+                kind: .letter(fallback)
+            )
+        }
+    }
+}
+
+private struct BrandLogoBadge: View {
+    let brand: String
+    var size: CGFloat = 44
+    var isSelected: Bool = false
+    var isFilled: Bool = true
+
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        let visual = BrandVisual.forBrand(brand)
+        ZStack {
+            Circle()
+                .fill(backgroundFill(for: visual))
+                .overlay(
+                    Circle()
+                        .stroke(borderColor(for: visual), lineWidth: isSelected ? 2 : 1)
+                )
+
+            logoContent(for: visual)
+                .frame(width: size * 0.62, height: size * 0.62)
+        }
+        .frame(width: size, height: size)
+        .shadow(color: shadowColor(for: visual), radius: isSelected ? 14 : 0, y: isSelected ? 8 : 0)
+    }
+
+    private func backgroundFill(for visual: BrandVisual) -> Color {
+        if isFilled {
+            return visual.fill
+        }
+        return visual.fill.opacity(colorScheme == .dark ? 0.24 : 0.14)
+    }
+
+    private func borderColor(for visual: BrandVisual) -> Color {
+        if isSelected {
+            return visual.accent.opacity(colorScheme == .dark ? 0.92 : 0.72)
+        }
+        return AppTheme.glassStroke
+    }
+
+    private func shadowColor(for visual: BrandVisual) -> Color {
+        guard isSelected else {
+            return .clear
+        }
+        return visual.accent.opacity(colorScheme == .dark ? 0.36 : 0.18)
+    }
+
+    @ViewBuilder
+    private func logoContent(for visual: BrandVisual) -> some View {
+        switch visual.kind {
+        case .all:
+            Image(systemName: "square.grid.2x2.fill")
+                .font(.system(size: size * 0.28, weight: .bold))
+                .foregroundStyle(visual.foreground)
+        case .luckin:
+            LuckinAntlerMark(color: visual.foreground)
+        case .starbucks:
+            ZStack {
+                Circle()
+                    .stroke(visual.foreground.opacity(0.9), lineWidth: size * 0.08)
+                Image(systemName: "star.fill")
+                    .font(.system(size: size * 0.18, weight: .black))
+                    .foregroundStyle(visual.foreground)
+            }
+            .padding(size * 0.05)
+        case .cotti:
+            Text("C")
+                .font(.system(size: size * 0.34, weight: .black, design: .rounded))
+                .foregroundStyle(visual.foreground)
+        case .heytea:
+            Text("喜")
+                .font(.system(size: size * 0.30, weight: .black, design: .rounded))
+                .foregroundStyle(visual.foreground)
+        case .chagee:
+            Text("茶")
+                .font(.system(size: size * 0.28, weight: .black, design: .rounded))
+                .foregroundStyle(visual.foreground)
+        case .alittle:
+            OneDotMark(color: visual.foreground)
+        case .blueBottle:
+            BlueBottleMark(color: visual.foreground)
+        case .letter(let glyph):
+            Text(glyph)
+                .font(.system(size: size * 0.30, weight: .black, design: .rounded))
+                .foregroundStyle(visual.foreground)
+        }
+    }
+}
+
+private struct LuckinAntlerMark: View {
+    let color: Color
+
+    var body: some View {
+        GeometryReader { geometry in
+            let width = geometry.size.width
+            let height = geometry.size.height
+
+            ZStack {
+                Circle()
+                    .fill(color)
+                    .frame(width: width * 0.18, height: width * 0.18)
+                    .offset(y: height * 0.18)
+
+                HStack(spacing: width * 0.18) {
+                    antler(left: true, width: width, height: height)
+                    antler(left: false, width: width, height: height)
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+    }
+
+    private func antler(left: Bool, width: CGFloat, height: CGFloat) -> some View {
+        let direction: CGFloat = left ? -1 : 1
+
+        return ZStack {
+            Capsule()
+                .fill(color)
+                .frame(width: width * 0.11, height: height * 0.46)
+                .rotationEffect(.degrees(Double(direction) * 28))
+                .offset(y: -height * 0.04)
+
+            Capsule()
+                .fill(color)
+                .frame(width: width * 0.08, height: height * 0.24)
+                .rotationEffect(.degrees(Double(direction) * -30))
+                .offset(x: direction * width * 0.12, y: -height * 0.18)
+
+            Capsule()
+                .fill(color)
+                .frame(width: width * 0.07, height: height * 0.18)
+                .rotationEffect(.degrees(Double(direction) * 12))
+                .offset(x: -direction * width * 0.04, y: -height * 0.30)
+        }
+    }
+}
+
+private struct OneDotMark: View {
+    let color: Color
+
+    var body: some View {
+        GeometryReader { geometry in
+            let width = geometry.size.width
+            ZStack {
+                Text("1")
+                    .font(.system(size: width * 0.56, weight: .black, design: .rounded))
+                    .foregroundStyle(color)
+
+                Circle()
+                    .fill(color)
+                    .frame(width: width * 0.14, height: width * 0.14)
+                    .offset(x: -width * 0.28, y: width * 0.18)
+
+                Circle()
+                    .fill(color)
+                    .frame(width: width * 0.10, height: width * 0.10)
+                    .offset(x: width * 0.28, y: width * 0.16)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+    }
+}
+
+private struct BlueBottleMark: View {
+    let color: Color
+
+    var body: some View {
+        GeometryReader { geometry in
+            let width = geometry.size.width
+            let height = geometry.size.height
+
+            Capsule()
+                .fill(color)
+                .frame(width: width * 0.32, height: height * 0.72)
+                .overlay(
+                    Capsule()
+                        .fill(Color.clear)
+                        .stroke(color.opacity(0.9), lineWidth: 0)
+                )
+                .overlay(alignment: .top) {
+                    Capsule()
+                        .fill(color)
+                        .frame(width: width * 0.14, height: height * 0.12)
+                        .offset(y: -height * 0.12)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+    }
+}
+
+private struct BrandCircleChip: View {
+    let brand: String
+    let isSelected: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            BrandLogoBadge(
+                brand: brand,
+                size: 52,
+                isSelected: isSelected,
+                isFilled: isSelected
+            )
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+private struct SelectorSectionCard<Content: View>: View {
+    let title: String
+    let subtitle: String?
+    let actionTitle: String?
+    let action: (() -> Void)?
+    let content: Content
+
+    init(
+        title: String,
+        subtitle: String? = nil,
+        actionTitle: String? = nil,
+        action: (() -> Void)? = nil,
+        @ViewBuilder content: () -> Content
+    ) {
+        self.title = title
+        self.subtitle = subtitle
+        self.actionTitle = actionTitle
+        self.action = action
+        self.content = content()
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(title)
+                        .font(.system(.title3, design: .rounded, weight: .bold))
+                        .foregroundStyle(AppTheme.ink)
+                    if let subtitle {
+                        Text(subtitle)
+                            .font(.system(.caption, design: .rounded, weight: .semibold))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                Spacer(minLength: 12)
+
+                if let actionTitle, let action {
+                    Button(actionTitle, action: action)
+                        .buttonStyle(.plain)
+                        .font(.system(.caption, design: .rounded, weight: .bold))
+                        .foregroundStyle(AppTheme.accent)
+                }
+            }
+
+            content
+        }
+        .padding(18)
+        .background(AppTheme.panelSurface, in: RoundedRectangle(cornerRadius: 28, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 28, style: .continuous)
+                .stroke(AppTheme.outline, lineWidth: 1)
+        )
+        .shadow(color: AppTheme.shadow, radius: 16, y: 10)
+    }
+}
+
+private struct DrinkLeadingMark: View {
+    let brand: String?
+    let category: String
+
+    var body: some View {
+        ZStack(alignment: .bottomTrailing) {
+            BrandLogoBadge(
+                brand: brand?.isEmpty == false ? brand! : category,
+                size: 44,
+                isFilled: true
+            )
+
+            Circle()
+                .fill(AppTheme.elevatedSurface)
+                .frame(width: 18, height: 18)
+                .overlay(
+                    Image(systemName: baseIcon)
+                        .font(.system(size: 9, weight: .bold))
+                        .foregroundStyle(AppTheme.ink)
+                )
+                .offset(x: 2, y: 2)
+        }
+    }
+
+    private var baseIcon: String {
+        if category.contains("奶茶") || category.contains("果茶") {
+            return "takeoutbag.and.cup.and.straw.fill"
+        }
+        if category.contains("手冲") {
+            return "drop.fill"
+        }
+        return "cup.and.saucer.fill"
+    }
+}
+
+private struct SelectorDrinkRow: View {
+    let drink: DrinkDefinitionSummary
+    let isRecording: Bool
+    let onRecord: () -> Void
+    let onOpenBrew: (() -> Void)?
+
+    var body: some View {
+        HStack(spacing: 12) {
+            DrinkLeadingMark(brand: drink.brand, category: drink.category)
+
+            VStack(alignment: .leading, spacing: 6) {
+                Text(drink.name)
+                    .font(.system(.headline, design: .rounded, weight: .bold))
+                    .foregroundStyle(AppTheme.ink)
+                    .lineLimit(1)
+
+                Text(metaLine)
+                .font(.system(.caption, design: .rounded, weight: .semibold))
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+            }
+
+            Spacer(minLength: 8)
+
+            HStack(spacing: 8) {
+                if let onOpenBrew {
+                    Button {
+                        onOpenBrew()
+                    } label: {
+                        Image(systemName: "slider.horizontal.3")
+                            .font(.system(size: 13, weight: .bold))
+                            .foregroundStyle(AppTheme.ink)
+                            .frame(width: 32, height: 32)
+                            .background(AppTheme.softFill, in: Circle())
+                    }
+                    .buttonStyle(.plain)
+                }
+
+                Button(action: onRecord) {
+                    Image(systemName: isRecording ? "hourglass" : "plus")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundStyle(.white)
+                        .frame(width: 34, height: 34)
+                        .background(AppTheme.accent, in: Circle())
+                }
+                .buttonStyle(.plain)
+                .disabled(isRecording)
+            }
+        }
+        .padding(.vertical, 12)
+        .opacity(isRecording ? 0.82 : 1)
+    }
+
+    private var metaLine: String {
+        "\(Int(drink.metrics.caffeineMG))mg · \(compactServingName(drink.preferredServing.name, volumeML: drink.preferredServing.volumeML))"
+    }
+}
+
+private struct SelectorRecentRow: View {
+    let entry: DrinkLogEntry
+
+    var body: some View {
+        HStack(spacing: 12) {
+            DrinkLeadingMark(brand: entry.brand, category: entry.category)
+
+            VStack(alignment: .leading, spacing: 6) {
+                Text(entry.drinkName)
+                    .font(.system(.headline, design: .rounded, weight: .bold))
+                    .foregroundStyle(AppTheme.ink)
+                    .lineLimit(1)
+
+                Text(metaLine)
+                .font(.system(.caption, design: .rounded, weight: .semibold))
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+            }
+
+            Spacer(minLength: 8)
+
+            Text(dateText)
+                .font(.system(.caption, design: .rounded, weight: .semibold))
+                .foregroundStyle(.secondary)
+        }
+        .padding(.vertical, 12)
+    }
+
+    private var dateText: String {
+        if Calendar.current.isDateInToday(entry.consumedAt) {
+            return entry.consumedAt.formatted(date: .omitted, time: .shortened)
+        }
+        return entry.consumedAt.formatted(.dateTime.month().day())
+    }
+
+    private var metaLine: String {
+        var parts = ["\(Int(entry.metrics.caffeineMG))mg"]
+        let serving = compactServingName(entry.servingLabel, volumeML: Int(entry.metrics.volumeML.rounded()))
+        if serving.isEmpty == false {
+            parts.append(serving)
+        }
+        return parts.joined(separator: " · ")
+    }
 }
 
 private struct RailActionButton: View {
@@ -914,6 +1737,19 @@ private extension LogView {
     ) -> some View {
         RailActionButton(title: title, systemImage: systemImage, action: action)
     }
+
+    func quickActionButton(
+        title: String,
+        systemImage: String,
+        tint: Color,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            QuickActionPill(title: title, systemImage: systemImage, tint: tint)
+        }
+        .buttonStyle(.plain)
+        .disabled(isRecognizingQuickCapture || environment.isRecordingDrink)
+    }
 }
 
 private struct FilterChip: View {
@@ -940,13 +1776,28 @@ private struct FilterChip: View {
                     if isSelected {
                         Capsule().fill(AppTheme.accent)
                     } else {
-                        Capsule().fill(Color.white.opacity(0.68))
+                        Capsule().fill(AppTheme.elevatedSurface)
                     }
                 }
+            )
+            .overlay(
+                Capsule()
+                    .stroke(isSelected ? AppTheme.accent.opacity(0.28) : AppTheme.glassStroke, lineWidth: 1)
             )
         }
         .buttonStyle(.plain)
     }
+}
+
+private func compactServingName(_ label: String, volumeML: Int) -> String {
+    let trimmed = label.trimmingCharacters(in: .whitespacesAndNewlines)
+    if trimmed.isEmpty {
+        return volumeML > 0 ? "\(volumeML)ml" : ""
+    }
+    if trimmed.contains("标准") || trimmed.contains("默认") {
+        return volumeML > 0 ? "\(volumeML)ml" : trimmed
+    }
+    return trimmed
 }
 
 private struct CompactDeckChip: View {
@@ -1299,57 +2150,743 @@ private struct BrewNumber: View {
 }
 
 private struct CaffeineCalculatorView: View {
-    @State private var beansGrams = 18.0
-    @State private var extractionRatio = 1.35
-    @State private var cups = 1.0
+    @Bindable var environment: AppEnvironment
+
+    @Environment(\.dismiss) private var dismiss
+
+    @State private var input = CaffeineCalculatorInput.preset(for: .espresso)
+    @State private var isPresentingSaveTemplate = false
+    @State private var isPresentingInfo = false
+    @State private var didCopyValue = false
+
+    private let columns = [
+        GridItem(.flexible(), spacing: 12),
+        GridItem(.flexible(), spacing: 12),
+    ]
 
     private var estimatedCaffeineMG: Int {
-        Int((beansGrams * 12 * extractionRatio * cups).rounded())
+        CaffeineCalculatorEstimator.estimateMG(for: input)
     }
 
     var body: some View {
-        List {
-            Section("估算参数") {
-                sliderRow(title: "咖啡粉", value: $beansGrams, range: 8 ... 40, unit: "g")
-                sliderRow(title: "萃取系数", value: $extractionRatio, range: 0.8 ... 1.8, unit: "")
-                sliderRow(title: "杯数", value: $cups, range: 1 ... 4, unit: "杯", step: 1)
+        ScrollView(showsIndicators: false) {
+            VStack(spacing: 18) {
+                calculatorHeader
+                methodHero
+                resultCard
+                parameterGrid
             }
+            .padding(16)
+            .padding(.bottom, 136)
+        }
+        .background(calculatorBackground.ignoresSafeArea())
+        .toolbar(.hidden, for: .navigationBar)
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            VStack(spacing: 0) {
+                LinearGradient(
+                    colors: [Color.clear, AppTheme.elevatedSurface.opacity(0.72)],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .frame(height: 18)
 
-            Section("结果") {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("\(estimatedCaffeineMG) mg")
-                        .font(.system(size: 34, weight: .bold, design: .rounded))
-                        .foregroundStyle(AppTheme.accent)
-                    Text("按咖啡豆约每克 12mg 咖啡因的经验值估算，适合离线快速估一杯或一套配方。")
-                        .font(.system(.footnote, design: .rounded, weight: .semibold))
-                        .foregroundStyle(.secondary)
-                }
-                .padding(.vertical, 6)
+                bottomActionBar
+                    .padding(.horizontal, 16)
+                    .padding(.top, 2)
+                    .padding(.bottom, 6)
+                    .background(AppTheme.elevatedSurface.opacity(0.82))
             }
         }
-        .navigationTitle("咖啡因计算器")
-        .navigationBarTitleDisplayMode(.inline)
+        .sheet(isPresented: $isPresentingSaveTemplate) {
+            SaveCalculatorTemplateSheet(
+                environment: environment,
+                method: input.method,
+                estimatedCaffeineMG: estimatedCaffeineMG,
+                volumeML: Int(input.waterML.rounded())
+            )
+        }
+        .sheet(isPresented: $isPresentingInfo) {
+            calculatorInfoSheet
+        }
+    }
+
+    private var calculatorHeader: some View {
+        HStack {
+            calculatorCircleButton(systemImage: "info") {
+                isPresentingInfo = true
+            }
+
+            Spacer()
+
+            Text("咖啡因计算器")
+                .font(.system(.title3, design: .rounded, weight: .bold))
+                .foregroundStyle(AppTheme.ink)
+
+            Spacer()
+
+            calculatorCircleButton(systemImage: "checkmark") {
+                dismiss()
+            }
+        }
+    }
+
+    private var methodHero: some View {
+        VStack(spacing: 8) {
+            HStack {
+                calculatorArrowButton(systemImage: "chevron.left") {
+                    shiftMethod(by: -1)
+                }
+
+                Spacer()
+
+                CalculatorMethodIllustration(method: input.method)
+
+                Spacer()
+
+                calculatorArrowButton(systemImage: "chevron.right") {
+                    shiftMethod(by: 1)
+                }
+            }
+
+            Text(input.method.title)
+                .font(.system(size: 28, weight: .bold, design: .rounded))
+                .foregroundStyle(AppTheme.ink)
+
+            HStack(spacing: 10) {
+                ForEach(CalculatorBrewMethod.allCases) { method in
+                    Circle()
+                        .fill(method == input.method ? AppTheme.ink : AppTheme.ink.opacity(0.18))
+                        .frame(width: 8, height: 8)
+                }
+            }
+        }
+    }
+
+    private var parameterGrid: some View {
+        LazyVGrid(columns: columns, alignment: .leading, spacing: 12) {
+            CalculatorAdjustableCard(
+                title: "阿拉比卡",
+                value: "\(Int(input.beansGrams.rounded()))g",
+                tint: Color(red: 0.54, green: 0.27, blue: 0.11),
+                systemImage: "bean.fill",
+                onDecrease: { input.beansGrams = max(4, input.beansGrams - 1) },
+                onIncrease: { input.beansGrams = min(40, input.beansGrams + 1) }
+            )
+
+            CalculatorCyclingCard(
+                title: "烘焙",
+                value: input.roastLevel.label,
+                tint: Color(red: 0.96, green: 0.58, blue: 0.22),
+                systemImage: "flame.fill"
+            ) {
+                cycleRoast()
+            }
+
+            CalculatorCyclingCard(
+                title: "研磨",
+                value: input.grindLevel.label,
+                tint: Color(red: 0.38, green: 0.80, blue: 0.73),
+                systemImage: "dial.medium"
+            ) {
+                cycleGrind()
+            }
+
+            CalculatorStaticCard(
+                title: "参数",
+                value: input.method.parameterLine,
+                tint: Color(red: 0.79, green: 0.40, blue: 0.95),
+                systemImage: "thermometer.medium"
+            )
+
+            CalculatorAdjustableCard(
+                title: "水量",
+                value: "\(Int(input.waterML.rounded())) mL",
+                tint: Color(red: 0.34, green: 0.71, blue: 0.91),
+                systemImage: "drop.fill",
+                onDecrease: { input.waterML = max(20, input.waterML - 10) },
+                onIncrease: { input.waterML = min(600, input.waterML + 10) }
+            )
+        }
+    }
+
+    private var resultCard: some View {
+        VStack(spacing: 12) {
+            Text("估算咖啡因含量")
+                .font(.system(.headline, design: .rounded, weight: .bold))
+                .foregroundStyle(.secondary)
+
+            HStack(alignment: .lastTextBaseline, spacing: 8) {
+                Image(systemName: "laurel.leading")
+                    .font(.system(size: 30, weight: .bold))
+                    .foregroundStyle(Color(red: 0.95, green: 0.58, blue: 0.20))
+
+                Text("\(estimatedCaffeineMG)")
+                    .font(.system(size: 50, weight: .bold, design: .rounded))
+                    .foregroundStyle(AppTheme.ink)
+
+                Text("mg")
+                    .font(.system(.title, design: .rounded, weight: .bold))
+                    .foregroundStyle(.secondary)
+            }
+
+            Text("基于本地离线经验模型估算，适合快速比较不同冲煮方式。")
+                .font(.system(.caption, design: .rounded, weight: .semibold))
+                .foregroundStyle(.secondary)
+
+            if didCopyValue {
+                Text("已复制到剪贴板")
+                    .font(.system(.caption, design: .rounded, weight: .bold))
+                    .foregroundStyle(AppTheme.accent)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 10)
+    }
+
+    private var bottomActionBar: some View {
+        HStack(spacing: 12) {
+            Button {
+                UIPasteboard.general.string = "\(estimatedCaffeineMG)"
+                withAnimation(.spring(response: 0.24, dampingFraction: 0.86)) {
+                    didCopyValue = true
+                }
+                Task {
+                    try? await Task.sleep(for: .seconds(1.2))
+                    await MainActor.run {
+                        didCopyValue = false
+                    }
+                }
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "doc.on.doc")
+                    Text("拷贝咖啡因")
+                }
+                .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(CalculatorBottomButtonStyle())
+
+            Button {
+                isPresentingSaveTemplate = true
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "plus")
+                    Text("创建饮品")
+                }
+                .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(CalculatorBottomButtonStyle())
+        }
+        .padding(5)
+        .background(AppTheme.elevatedSurface, in: RoundedRectangle(cornerRadius: 28, style: .continuous))
+        .shadow(color: AppTheme.shadow, radius: 18, y: 8)
+    }
+
+    private var calculatorBackground: some View {
+        AppTheme.pageBackground
+    }
+
+    private var calculatorInfoSheet: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 18) {
+                    SectionCard(title: "怎么估算", subtitle: "离线经验模型") {
+                        Text("这页会根据冲煮方式、咖啡粉、烘焙、研磨和水量，给出一个本地估算值。它适合快速比较不同做法，不是实验室检测值。")
+                            .font(.system(.subheadline, design: .rounded))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .padding(16)
+            }
+            .navigationTitle("说明")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("完成") {
+                        isPresentingInfo = false
+                    }
+                }
+            }
+        }
+    }
+
+    private func shiftMethod(by step: Int) {
+        let methods = CalculatorBrewMethod.allCases
+        guard let currentIndex = methods.firstIndex(of: input.method) else {
+            input = .preset(for: .espresso)
+            return
+        }
+        let nextIndex = (currentIndex + step + methods.count) % methods.count
+        input = .preset(for: methods[nextIndex])
+    }
+
+    private func cycleRoast() {
+        let all = RoastLevel.allCases
+        guard let index = all.firstIndex(of: input.roastLevel) else {
+            input.roastLevel = .medium
+            return
+        }
+        input.roastLevel = all[(index + 1) % all.count]
+    }
+
+    private func cycleGrind() {
+        let all = GrindLevel.allCases
+        guard let index = all.firstIndex(of: input.grindLevel) else {
+            input.grindLevel = .standard
+            return
+        }
+        input.grindLevel = all[(index + 1) % all.count]
     }
 
     @ViewBuilder
-    private func sliderRow(
-        title: String,
-        value: Binding<Double>,
-        range: ClosedRange<Double>,
-        unit: String,
-        step: Double = 0.1
-    ) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
+    private func calculatorCircleButton(systemImage: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: systemImage)
+                .font(.system(size: 26, weight: .bold))
+                .foregroundStyle(AppTheme.ink)
+                .frame(width: 54, height: 54)
+                .background(AppTheme.elevatedSurface, in: Circle())
+                .shadow(color: AppTheme.shadow, radius: 12, y: 6)
+        }
+        .buttonStyle(.plain)
+    }
+
+    @ViewBuilder
+    private func calculatorArrowButton(systemImage: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: systemImage)
+                .font(.system(size: 18, weight: .bold))
+                .foregroundStyle(.secondary)
+                .frame(width: 42, height: 42)
+                .background(AppTheme.softFill, in: Circle())
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+private struct CalculatorMethodIllustration: View {
+    let method: CalculatorBrewMethod
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 42, style: .continuous)
+                .fill(AppTheme.elevatedSurface)
+                .frame(width: 188, height: 188)
+                .shadow(color: AppTheme.shadow, radius: 20, y: 12)
+
+            switch method {
+            case .espresso:
+                espressoMachine
+            case .pourOver:
+                pourOverRig
+            case .capsule:
+                capsuleRig
+            }
+        }
+    }
+
+    private var espressoMachine: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [Color(red: 0.30, green: 0.32, blue: 0.35), Color(red: 0.16, green: 0.17, blue: 0.20)],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+                .frame(width: 112, height: 136)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        .stroke(Color.white.opacity(colorScheme == .dark ? 0.14 : 0.08), lineWidth: 1)
+                )
+
+            VStack(spacing: 10) {
+                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                    .fill(Color.white.opacity(0.18))
+                    .frame(width: 42, height: 24)
+
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(Color.white.opacity(0.14))
+                    .frame(width: 84, height: 16)
+
+                Circle()
+                    .fill(Color.black.opacity(0.42))
+                    .frame(width: 26, height: 26)
+
+                HStack(spacing: 8) {
+                    Capsule()
+                        .fill(Color.black.opacity(0.44))
+                        .frame(width: 34, height: 6)
+
+                    Capsule()
+                        .fill(Color.white.opacity(0.72))
+                        .frame(width: 16, height: 6)
+                }
+            }
+
+            Capsule()
+                .fill(Color.white.opacity(0.72))
+                .frame(width: 6, height: 50)
+                .offset(x: 48, y: 14)
+
+            VStack(spacing: 4) {
+                Image(systemName: "cup.and.saucer.fill")
+                    .font(.system(size: 24, weight: .bold))
+                    .foregroundStyle(Color.white.opacity(0.94))
+
+                Capsule()
+                    .fill(Color(red: 0.56, green: 0.38, blue: 0.22))
+                    .frame(width: 28, height: 5)
+            }
+            .offset(y: 34)
+        }
+    }
+
+    private var pourOverRig: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 5, style: .continuous)
+                .fill(AppTheme.ink.opacity(0.18))
+                .frame(width: 6, height: 92)
+                .offset(x: -42, y: 12)
+
+            RoundedRectangle(cornerRadius: 999, style: .continuous)
+                .fill(AppTheme.ink.opacity(0.18))
+                .frame(width: 92, height: 6)
+                .offset(x: 4, y: 58)
+
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [Color(red: 0.78, green: 0.80, blue: 0.83), Color(red: 0.56, green: 0.60, blue: 0.66)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .frame(width: 72, height: 46)
+                .offset(x: -20, y: -42)
+                .overlay(
+                    Circle()
+                        .stroke(Color.white.opacity(0.75), lineWidth: 4)
+                        .frame(width: 26, height: 26)
+                        .offset(x: -34, y: -42)
+                )
+
+            Capsule()
+                .fill(Color.white.opacity(0.76))
+                .frame(width: 18, height: 6)
+                .offset(x: -16, y: -58)
+
+            Capsule()
+                .fill(Color(red: 0.68, green: 0.72, blue: 0.77))
+                .frame(width: 36, height: 6)
+                .rotationEffect(.degrees(-24))
+                .offset(x: 16, y: -26)
+
+            VStack(spacing: 6) {
+                Circle()
+                    .fill(Color(red: 0.38, green: 0.72, blue: 0.96))
+                    .frame(width: 6, height: 6)
+                Circle()
+                    .fill(Color(red: 0.38, green: 0.72, blue: 0.96))
+                    .frame(width: 5, height: 5)
+                Circle()
+                    .fill(Color(red: 0.38, green: 0.72, blue: 0.96))
+                    .frame(width: 4, height: 4)
+            }
+            .offset(x: 20, y: -4)
+
+            Triangle()
+                .fill(Color.white.opacity(0.96))
+                .frame(width: 50, height: 34)
+                .overlay(
+                    Triangle()
+                        .stroke(Color.black.opacity(colorScheme == .dark ? 0.16 : 0.06), lineWidth: 1)
+                )
+                .offset(x: 8, y: 6)
+
+            ZStack(alignment: .bottom) {
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .fill(Color.white.opacity(colorScheme == .dark ? 0.14 : 0.92))
+                    .frame(width: 62, height: 46)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .stroke(Color.white.opacity(colorScheme == .dark ? 0.18 : 0.72), lineWidth: 1)
+                    )
+
+                Capsule()
+                    .fill(Color(red: 0.56, green: 0.38, blue: 0.22))
+                    .frame(width: 28, height: 10)
+                    .offset(y: -8)
+            }
+            .offset(x: 8, y: 42)
+        }
+    }
+
+    private var capsuleRig: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [Color(red: 0.27, green: 0.29, blue: 0.33), Color(red: 0.15, green: 0.17, blue: 0.19)],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+                .frame(width: 96, height: 118)
+                .offset(x: 22, y: -4)
+
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(Color.white.opacity(0.14))
+                .frame(width: 46, height: 14)
+                .offset(x: 22, y: -42)
+
+            Capsule()
+                .fill(
+                    LinearGradient(
+                        colors: [Color(red: 0.82, green: 0.56, blue: 0.24), Color(red: 0.55, green: 0.33, blue: 0.13)],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+                .frame(width: 64, height: 34)
+                .overlay(
+                    Capsule()
+                        .stroke(Color.white.opacity(0.42), lineWidth: 2)
+                )
+                .offset(x: -28, y: -6)
+
+            Capsule()
+                .fill(Color.white.opacity(0.72))
+                .frame(width: 18, height: 6)
+                .offset(x: 34, y: 10)
+
+            VStack(spacing: 4) {
+                Image(systemName: "cup.and.saucer.fill")
+                    .font(.system(size: 24, weight: .bold))
+                    .foregroundStyle(Color(red: 0.31, green: 0.31, blue: 0.36))
+                Capsule()
+                    .fill(Color(red: 0.56, green: 0.38, blue: 0.22))
+                    .frame(width: 24, height: 5)
+            }
+            .offset(x: 18, y: 42)
+        }
+    }
+}
+
+private struct CalculatorAdjustableCard: View {
+    let title: String
+    let value: String
+    let tint: Color
+    let systemImage: String
+    let onDecrease: () -> Void
+    let onIncrease: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
             HStack {
                 Text(title)
+                    .font(.system(.headline, design: .rounded, weight: .bold))
+                    .foregroundStyle(tint)
                 Spacer()
-                Text(unit.isEmpty ? value.wrappedValue.formatted(.number.precision(.fractionLength(1))) : "\(Int(value.wrappedValue.rounded()))\(unit)")
+                Image(systemName: systemImage)
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundStyle(tint)
+            }
+
+            Text(value)
+                .font(.system(size: 24, weight: .bold, design: .rounded))
+                .foregroundStyle(AppTheme.ink)
+
+            HStack(spacing: 8) {
+                calculatorMiniButton(systemImage: "minus", action: onDecrease)
+                calculatorMiniButton(systemImage: "plus", action: onIncrease)
+            }
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, minHeight: 120, alignment: .leading)
+        .background(AppTheme.elevatedSurface, in: RoundedRectangle(cornerRadius: 28, style: .continuous))
+    }
+
+    @ViewBuilder
+    private func calculatorMiniButton(systemImage: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: systemImage)
+                .font(.system(size: 12, weight: .bold))
+                .foregroundStyle(.secondary)
+                .frame(width: 30, height: 30)
+                .background(AppTheme.softFill, in: Circle())
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+private struct CalculatorCyclingCard: View {
+    let title: String
+    let value: String
+    let tint: Color
+    let systemImage: String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            VStack(alignment: .leading, spacing: 14) {
+                HStack {
+                    Text(title)
+                        .font(.system(.headline, design: .rounded, weight: .bold))
+                        .foregroundStyle(tint)
+                    Spacer()
+                    Image(systemName: systemImage)
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundStyle(tint)
+                }
+
+                Text(value)
+                    .font(.system(size: 22, weight: .bold, design: .rounded))
+                    .foregroundStyle(AppTheme.ink)
+
+                Text("点击切换")
+                    .font(.system(.caption, design: .rounded, weight: .semibold))
                     .foregroundStyle(.secondary)
             }
-            Slider(value: value, in: range, step: step)
-                .tint(AppTheme.accent)
+            .padding(14)
+            .frame(maxWidth: .infinity, minHeight: 120, alignment: .leading)
+            .background(AppTheme.elevatedSurface, in: RoundedRectangle(cornerRadius: 28, style: .continuous))
         }
-        .padding(.vertical, 4)
+        .buttonStyle(.plain)
+    }
+}
+
+private struct CalculatorStaticCard: View {
+    let title: String
+    let value: String
+    let tint: Color
+    let systemImage: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack {
+                Text(title)
+                    .font(.system(.headline, design: .rounded, weight: .bold))
+                    .foregroundStyle(tint)
+                Spacer()
+                Image(systemName: systemImage)
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundStyle(tint)
+            }
+
+            Text(value)
+                .font(.system(size: 20, weight: .bold, design: .rounded))
+                .foregroundStyle(AppTheme.ink)
+                .minimumScaleFactor(0.7)
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, minHeight: 120, alignment: .leading)
+        .background(AppTheme.elevatedSurface, in: RoundedRectangle(cornerRadius: 28, style: .continuous))
+    }
+}
+
+private struct CalculatorBottomButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.system(.headline, design: .rounded, weight: .bold))
+            .foregroundStyle(AppTheme.ink)
+            .padding(.vertical, 14)
+            .background(AppTheme.softFill.opacity(configuration.isPressed ? 1 : 0.88), in: Capsule())
+            .scaleEffect(configuration.isPressed ? 0.98 : 1)
+    }
+}
+
+private struct SaveCalculatorTemplateSheet: View {
+    @Bindable var environment: AppEnvironment
+
+    @Environment(\.dismiss) private var dismiss
+
+    let method: CalculatorBrewMethod
+    let estimatedCaffeineMG: Int
+    let volumeML: Int
+
+    @State private var brand = "我的器具"
+    @State private var name = ""
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 18) {
+                    SectionCard(title: "存成我的饮品", subtitle: "以后可以直接在个人分区复用") {
+                        VStack(spacing: 14) {
+                            TextField("品牌，例如 家里 / 公司 / 常用器具", text: $brand)
+                                .textFieldStyle(.roundedBorder)
+
+                            TextField("饮品名，例如 意式双份", text: $name)
+                                .textFieldStyle(.roundedBorder)
+
+                            HStack(spacing: 10) {
+                                MetricPill(label: "方式", value: method.title)
+                                MetricPill(label: "咖啡因", value: "\(estimatedCaffeineMG)mg")
+                            }
+                        }
+                    }
+                }
+                .padding(16)
+            }
+            .navigationTitle("创建饮品")
+            .navigationBarTitleDisplayMode(.inline)
+            .task {
+                if name.isEmpty {
+                    name = method.title
+                }
+            }
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("取消") {
+                        dismiss()
+                    }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("保存") {
+                        environment.addUserDrinkTemplate(
+                            brand: brand.trimmingCharacters(in: .whitespacesAndNewlines),
+                            name: name.trimmingCharacters(in: .whitespacesAndNewlines),
+                            category: "咖啡",
+                            caffeineMG: Double(estimatedCaffeineMG),
+                            sugarG: 0,
+                            volumeML: volumeML,
+                            preparationMethod: brewMethod
+                        )
+                        dismiss()
+                    }
+                    .disabled(canSave == false)
+                }
+            }
+        }
+    }
+
+    private var brewMethod: BrewMethod {
+        switch method {
+        case .espresso:
+            return .espressoMachine
+        case .pourOver:
+            return .handBrew
+        case .capsule:
+            return .readyToDrink
+        }
+    }
+
+    private var canSave: Bool {
+        brand.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
+            && name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
+    }
+}
+
+private struct Triangle: Shape {
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        path.move(to: CGPoint(x: rect.midX, y: rect.minY))
+        path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
+        path.addLine(to: CGPoint(x: rect.minX, y: rect.maxY))
+        path.closeSubpath()
+        return path
     }
 }
 

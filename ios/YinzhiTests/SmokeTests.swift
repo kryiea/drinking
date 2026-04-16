@@ -237,6 +237,56 @@ final class SmokeTests: XCTestCase {
         XCTAssertEqual(environment.userDrinkTemplates.count, initialCount)
         XCTAssertFalse(environment.userDrinkTemplates.contains(where: { $0.id == created.id }))
     }
+
+    func testCaffeineCalculatorEstimateGrowsWithBeanDose() {
+        let base = CaffeineCalculatorInput(
+            method: .espresso,
+            beansGrams: 18,
+            waterML: 36,
+            roastLevel: .medium,
+            grindLevel: .fine
+        )
+        var stronger = base
+        stronger.beansGrams = 22
+
+        XCTAssertGreaterThan(
+            CaffeineCalculatorEstimator.estimateMG(for: stronger),
+            CaffeineCalculatorEstimator.estimateMG(for: base)
+        )
+    }
+
+    func testCaffeineCalculatorEstimateReflectsRoastAndMethodFactors() {
+        let pourOver = CaffeineCalculatorInput(
+            method: .pourOver,
+            beansGrams: 18,
+            waterML: 300,
+            roastLevel: .light,
+            grindLevel: .medium
+        )
+        let capsule = CaffeineCalculatorInput(
+            method: .capsule,
+            beansGrams: 6,
+            waterML: 40,
+            roastLevel: .medium,
+            grindLevel: .standard
+        )
+        let darkPourOver = CaffeineCalculatorInput(
+            method: .pourOver,
+            beansGrams: 18,
+            waterML: 300,
+            roastLevel: .dark,
+            grindLevel: .medium
+        )
+
+        XCTAssertGreaterThan(
+            CaffeineCalculatorEstimator.estimateMG(for: pourOver),
+            CaffeineCalculatorEstimator.estimateMG(for: capsule)
+        )
+        XCTAssertGreaterThan(
+            CaffeineCalculatorEstimator.estimateMG(for: pourOver),
+            CaffeineCalculatorEstimator.estimateMG(for: darkPourOver)
+        )
+    }
 }
 
 private struct SessionPayloadProbe: Decodable {
