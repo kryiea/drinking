@@ -16,6 +16,8 @@ protocol DrinkLogClient: Sendable {
 protocol InsightsClient: Sendable {
     func loadAggregate(for day: Date) async throws -> DailyAggregateSnapshot
     func loadRecommendations(for day: Date) async throws -> [RecommendationCard]
+    func loadCaffeineForecast() async throws -> CaffeineForecastSummary
+    func loadAIBrief() async throws -> DailyAIBriefSummary
 }
 
 protocol GoalsClient: Sendable {
@@ -83,7 +85,9 @@ struct APIContainer: Sendable {
         )
     }()
 
-    static func make(config: AppConfig = .current) -> APIContainer {
+    @MainActor
+    static func make(config: AppConfig? = nil) -> APIContainer {
+        let config = config ?? .current
         guard config.apiBaseURL != nil else {
             return .preview
         }
@@ -310,6 +314,16 @@ private struct LiveInsightsClient: InsightsClient {
         )
         return response.map(\.asCard)
     }
+
+    func loadCaffeineForecast() async throws -> CaffeineForecastSummary {
+        let response: CaffeineForecastSummary = try await transport.send(path: "daily-insights/caffeine-forecast")
+        return response
+    }
+
+    func loadAIBrief() async throws -> DailyAIBriefSummary {
+        let response: DailyAIBriefSummary = try await transport.send(path: "daily-insights/ai-brief")
+        return response
+    }
 }
 
 private struct LiveGoalsClient: GoalsClient {
@@ -409,6 +423,14 @@ struct PreviewInsightsClient: InsightsClient {
 
     func loadRecommendations(for day: Date) async throws -> [RecommendationCard] {
         PreviewFixtures.dashboard.recommendations
+    }
+
+    func loadCaffeineForecast() async throws -> CaffeineForecastSummary {
+        PreviewFixtures.caffeineForecast
+    }
+
+    func loadAIBrief() async throws -> DailyAIBriefSummary {
+        PreviewFixtures.aiBrief
     }
 }
 

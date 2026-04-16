@@ -14,7 +14,7 @@ struct OnboardingView: View {
                     .font(.system(size: 52, weight: .black, design: .rounded))
                     .foregroundStyle(AppTheme.ink)
 
-                Text("记录每一杯，理解它对你今天的影响。")
+                Text("随手记下每一杯，马上知道今晚节奏。")
                     .font(.system(.title2, design: .rounded, weight: .semibold))
                     .foregroundStyle(AppTheme.ink.opacity(0.84))
 
@@ -23,9 +23,9 @@ struct OnboardingView: View {
                 }
 
                 VStack(spacing: 14) {
-                    onboardingItem(icon: "drop.circle.fill", title: "轻量记录", detail: "目录搜索、最近记录、自定义模板三种入口")
-                    onboardingItem(icon: "waveform.path.ecg.rectangle", title: "健康解释", detail: "把咖啡因、糖分和补水状态讲清楚")
-                    onboardingItem(icon: "sparkles", title: "可解释建议", detail: "每条建议都附带触发原因和风险说明")
+                    onboardingItem(icon: "plus.viewfinder", title: "快速记一杯", detail: "语音、拍照、最近一杯和品牌目录都能直接记。")
+                    onboardingItem(icon: "moon.stars.fill", title: "看今晚影响", detail: "首页和曲线页会直接告诉你当前值和睡前残留。")
+                    onboardingItem(icon: "icloud.fill", title: "先从本地开始", detail: "没连后端也能先记，后续再接上同步和导出。")
                 }
 
                 VStack(spacing: 12) {
@@ -51,7 +51,7 @@ struct OnboardingView: View {
                         .buttonStyle(SecondaryGlassButtonStyle())
                     }
 
-                    Button(environment.canUseRemoteAPI ? "先浏览离线体验" : "开始建立我的饮品节奏") {
+                    Button(environment.canUseRemoteAPI ? "先开始离线记录" : "开始记录我的节奏") {
                         environment.continueWithPreviewMode()
                     }
                     .buttonStyle(PrimaryCTAStyle())
@@ -60,7 +60,7 @@ struct OnboardingView: View {
                 if environment.isAuthenticating {
                     HStack(spacing: 10) {
                         ProgressView()
-                        Text("正在建立会话并同步今天的数据…")
+                        Text("正在建立会话并同步今天的记录…")
                             .font(.system(.subheadline, design: .rounded))
                             .foregroundStyle(.secondary)
                     }

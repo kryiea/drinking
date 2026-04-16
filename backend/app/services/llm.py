@@ -21,13 +21,32 @@ class OpenAICompatibleLLMService:
 
     async def preview(self, payload: LLMPreviewRequest) -> LLMPreviewResponse:
         status = self.status()
+        mode, output = await self.generate_text(
+            system_prompt=payload.system_prompt or "",
+            prompt=payload.prompt,
+            temperature=payload.temperature,
+        )
+
+        return LLMPreviewResponse(
+            configured=status.configured,
+            provider=settings.llm_provider,
+            model=settings.llm_model,
+            mode=mode,
+            output=output,
+        )
+
+    async def generate_text(
+        self,
+        *,
+        system_prompt: str,
+        prompt: str,
+        temperature: float | None = None,
+    ) -> tuple[str, str]:
+        status = self.status()
         if status.configured is False:
-            return LLMPreviewResponse(
-                configured=False,
-                provider=settings.llm_provider,
-                model=settings.llm_model,
-                mode="fallback",
-                output=(
+            return (
+                "fallback",
+                (
                     "LLM API 还没有配置完成，当前返回的是本地 fallback 结果。"
                     "后续填入 `YINZHI_LLM_BASE_URL`、`YINZHI_LLM_API_KEY` 和 `YINZHI_LLM_MODEL` 后，"
                     "support 平台就可以直接联调 OpenAI 兼容接口。"
@@ -37,12 +56,12 @@ class OpenAICompatibleLLMService:
         request_body: dict[str, Any] = {
             "model": settings.llm_model,
             "messages": [
-                {"role": "system", "content": payload.system_prompt or ""},
-                {"role": "user", "content": payload.prompt},
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": prompt},
             ],
         }
-        if payload.temperature is not None:
-            request_body["temperature"] = payload.temperature
+        if temperature is not None:
+            request_body["temperature"] = temperature
 
         try:
             async with httpx.AsyncClient(timeout=settings.llm_timeout_seconds) as client:
@@ -57,29 +76,14 @@ class OpenAICompatibleLLMService:
                 response.raise_for_status()
                 body = response.json()
         except httpx.HTTPStatusError as exc:
-            return LLMPreviewResponse(
-                configured=True,
-                provider=settings.llm_provider,
-                model=settings.llm_model,
-                mode="fallback",
-                output=self._format_provider_error(exc.response),
-            )
+            return "fallback", self._format_provider_error(exc.response)
         except httpx.HTTPError as exc:
-            return LLMPreviewResponse(
-                configured=True,
-                provider=settings.llm_provider,
-                model=settings.llm_model,
-                mode="fallback",
-                output=f"LLM 上游暂时不可用：{exc.__class__.__name__}。请检查 base URL、网络代理或服务商状态。",
+            return (
+                "fallback",
+                f"LLM 上游暂时不可用：{exc.__class__.__name__}。请检查 base URL、网络代理或服务商状态。",
             )
 
-        return LLMPreviewResponse(
-            configured=True,
-            provider=settings.llm_provider,
-            model=settings.llm_model,
-            mode="live",
-            output=self._extract_output(body),
-        )
+        return "live", self._extract_output(body)
 
     def _chat_completions_url(self, base_url: Optional[str]) -> str:
         base = (base_url or "").rstrip("/")

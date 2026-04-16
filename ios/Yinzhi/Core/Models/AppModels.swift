@@ -359,6 +359,153 @@ struct UserProfileSummary: Codable, Hashable, Sendable {
     var bloodSugarWatch: Bool
 }
 
+enum CaffeineMetabolismProfile: String, Codable, Hashable, Sendable, CaseIterable, Identifiable {
+    case quick
+    case standard
+    case sensitive
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .quick:
+            return "代谢偏快"
+        case .standard:
+            return "标准"
+        case .sensitive:
+            return "更敏感"
+        }
+    }
+
+    var caption: String {
+        switch self {
+        case .quick:
+            return "半衰期约 4.5h"
+        case .standard:
+            return "半衰期约 5.5h"
+        case .sensitive:
+            return "半衰期约 7h"
+        }
+    }
+
+    var halfLifeHours: Double {
+        switch self {
+        case .quick:
+            return 4.5
+        case .standard:
+            return 5.5
+        case .sensitive:
+            return 7.0
+        }
+    }
+
+    var safeSleepThresholdMG: Double {
+        switch self {
+        case .quick:
+            return 40
+        case .standard:
+            return 35
+        case .sensitive:
+            return 22
+        }
+    }
+}
+
+struct UserPreferenceSnapshot: Codable, Hashable, Sendable {
+    var sleepHour: Int
+    var sleepMinute: Int
+    var metabolismProfile: CaffeineMetabolismProfile
+    var iCloudPlanEnabled: Bool
+    var watchPlanEnabled: Bool
+
+    static let `default` = UserPreferenceSnapshot(
+        sleepHour: 23,
+        sleepMinute: 30,
+        metabolismProfile: .standard,
+        iCloudPlanEnabled: true,
+        watchPlanEnabled: true
+    )
+
+    var sleepHourText: String {
+        String(format: "%02d:%02d", sleepHour, sleepMinute)
+    }
+
+    var halfLifeHours: Double {
+        metabolismProfile.halfLifeHours
+    }
+
+    var safeSleepThresholdMG: Double {
+        metabolismProfile.safeSleepThresholdMG
+    }
+
+    func withSleepDate(_ date: Date, calendar: Calendar = .current) -> UserPreferenceSnapshot {
+        let components = calendar.dateComponents([.hour, .minute], from: date)
+        return UserPreferenceSnapshot(
+            sleepHour: components.hour ?? sleepHour,
+            sleepMinute: components.minute ?? sleepMinute,
+            metabolismProfile: metabolismProfile,
+            iCloudPlanEnabled: iCloudPlanEnabled,
+            watchPlanEnabled: watchPlanEnabled
+        )
+    }
+
+    var sleepDateToday: Date {
+        nextSleepDate(from: .now)
+    }
+
+    func nextSleepDate(from reference: Date, calendar: Calendar = .current) -> Date {
+        var components = calendar.dateComponents([.year, .month, .day], from: reference)
+        components.hour = sleepHour
+        components.minute = sleepMinute
+        components.second = 0
+
+        let sameDay = calendar.date(from: components) ?? reference
+        if sameDay > reference {
+            return sameDay
+        }
+        return calendar.date(byAdding: .day, value: 1, to: sameDay) ?? sameDay.addingTimeInterval(24 * 3600)
+    }
+}
+
+struct UserDrinkTemplate: Identifiable, Codable, Hashable, Sendable {
+    var id: String
+    var brand: String
+    var name: String
+    var category: String
+    var caffeineMG: Double
+    var sugarG: Double
+    var volumeML: Int
+    var preparationMethod: BrewMethod?
+
+    var detailLine: String {
+        let method = preparationMethod?.label ?? "未设方式"
+        return "\(category) · \(method) · \(Int(caffeineMG))mg · \(volumeML)ml"
+    }
+
+    var asDrinkDefinition: DrinkDefinitionSummary {
+        DrinkDefinitionSummary(
+            id: id,
+            name: name,
+            category: category,
+            brand: brand,
+            brandCollection: "我添加的饮品",
+            tags: ["自定义", category],
+            heroFlavor: "自定义饮品",
+            preparationMethods: preparationMethod.map { [$0] },
+            metrics: IngredientMetrics(
+                caffeineMG: caffeineMG,
+                sugarG: sugarG,
+                caloriesKcal: 0,
+                hydrationML: Double(volumeML),
+                volumeML: Double(volumeML)
+            ),
+            servingOptions: [
+                DrinkServingOption(id: "default", name: "标准杯", volumeML: volumeML, multiplier: 1.0),
+            ]
+        )
+    }
+}
+
 struct CategoryBreakdownSummary: Identifiable, Codable, Hashable, Sendable {
     var id: String { category }
     var category: String
@@ -383,6 +530,97 @@ struct DailyAggregateSnapshot: Codable, Hashable, Sendable {
         case totals
         case entriesCount = "entries_count"
         case categoryBreakdown = "category_breakdown"
+    }
+}
+
+enum SleepReadinessState: String, Codable, Hashable, Sendable {
+    case sleepFriendly = "sleep-friendly"
+    case watch
+    case likelyDisruptive = "likely-disruptive"
+
+    var label: String {
+        switch self {
+        case .sleepFriendly:
+            return "适合入睡"
+        case .watch:
+            return "仍需观察"
+        case .likelyDisruptive:
+            return "可能扰睡"
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .sleepFriendly:
+            return "bed.double.fill"
+        case .watch:
+            return "moon.zzz"
+        case .likelyDisruptive:
+            return "exclamationmark.triangle.fill"
+        }
+    }
+}
+
+struct CaffeineForecastPointSummary: Identifiable, Codable, Hashable, Sendable {
+    var id: Date { at }
+    var at: Date
+    var remainingCaffeineMG: Double
+    var stage: SleepReadinessState
+
+    enum CodingKeys: String, CodingKey {
+        case at
+        case remainingCaffeineMG = "remaining_caffeine_mg"
+        case stage
+    }
+}
+
+struct CaffeineForecastSummary: Codable, Hashable, Sendable {
+    var calculatedAt: Date
+    var sleepAt: Date
+    var halfLifeHours: Double
+    var currentEstimateMG: Double
+    var projectedSleepMG: Double
+    var safeSleepThresholdMG: Double
+    var recommendedSleepTime: Date?
+    var sleepReadiness: SleepReadinessState
+    var summary: String
+    var sleepImpact: String
+    var timeline: [CaffeineForecastPointSummary]
+
+    enum CodingKeys: String, CodingKey {
+        case calculatedAt = "calculated_at"
+        case sleepAt = "sleep_at"
+        case halfLifeHours = "half_life_hours"
+        case currentEstimateMG = "current_estimate_mg"
+        case projectedSleepMG = "projected_sleep_mg"
+        case safeSleepThresholdMG = "safe_sleep_threshold_mg"
+        case recommendedSleepTime = "recommended_sleep_time"
+        case sleepReadiness = "sleep_readiness"
+        case summary
+        case sleepImpact = "sleep_impact"
+        case timeline
+    }
+}
+
+struct DailyAIBriefSummary: Codable, Hashable, Sendable {
+    var mode: String
+    var generatedAt: Date
+    var headline: String
+    var narrative: String
+    var nextActions: [String]
+    var sleepNote: String
+
+    var isLive: Bool {
+        mode == "live"
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case mode
+        case generatedAt = "generated_at"
+        case headline
+        case narrative
+        case nextActions = "next_actions"
+        case sleepNote = "sleep_note"
     }
 }
 
@@ -451,6 +689,8 @@ struct DashboardState: Sendable {
     var recommendations: [RecommendationCard]
     var todayEntries: [DrinkLogEntry]
     var categoryBreakdown: [CategoryBreakdownSummary]
+    var caffeineForecast: CaffeineForecastSummary
+    var aiBrief: DailyAIBriefSummary
 }
 
 enum AppTab: String, CaseIterable, Identifiable {
@@ -491,6 +731,8 @@ enum PreviewFixtures {
         caffeineSensitive: false,
         bloodSugarWatch: true
     )
+
+    static let userPreferences = UserPreferenceSnapshot.default
 
     static let drinks: [DrinkDefinitionSummary] = [
         DrinkDefinitionSummary(
@@ -581,6 +823,187 @@ enum PreviewFixtures {
             metrics: IngredientMetrics(caffeineMG: 130, sugarG: 0, caloriesKcal: 6, hydrationML: 255, volumeML: 260),
             servingOptions: [.init(id: "v60", name: "V60 一杯份", volumeML: 260, multiplier: 1.0)]
         ),
+        DrinkDefinitionSummary(
+            id: "americano-iced",
+            name: "冰美式",
+            category: "咖啡",
+            brand: "瑞幸",
+            brandCollection: "日常通勤",
+            tags: ["低糖", "即点", "意式机"],
+            heroFlavor: "清爽黑咖",
+            preparationMethods: [.espressoMachine, .readyToDrink],
+            metrics: IngredientMetrics(caffeineMG: 140, sugarG: 0, caloriesKcal: 8, hydrationML: 360, volumeML: 380),
+            servingOptions: [.init(id: "large", name: "大杯", volumeML: 380, multiplier: 1.0)]
+        ),
+        DrinkDefinitionSummary(
+            id: "dirty-latte",
+            name: "Dirty",
+            category: "咖啡",
+            brand: "Peet's",
+            brandCollection: "精品咖啡",
+            tags: ["奶咖", "意式机", "下午"],
+            heroFlavor: "浓缩奶香",
+            preparationMethods: [.espressoMachine],
+            metrics: IngredientMetrics(caffeineMG: 135, sugarG: 6, caloriesKcal: 120, hydrationML: 190, volumeML: 220),
+            servingOptions: [.init(id: "regular", name: "标准杯", volumeML: 220, multiplier: 1.0)]
+        ),
+        DrinkDefinitionSummary(
+            id: "starbucks-flat-white",
+            name: "馥芮白",
+            category: "咖啡",
+            brand: "星巴克",
+            brandCollection: "经典意式",
+            tags: ["奶咖", "意式机", "高频"],
+            heroFlavor: "浓缩奶香",
+            preparationMethods: [.espressoMachine],
+            metrics: IngredientMetrics(caffeineMG: 130, sugarG: 9, caloriesKcal: 150, hydrationML: 250, volumeML: 330),
+            servingOptions: [.init(id: "tall", name: "中杯", volumeML: 330, multiplier: 1.0)]
+        ),
+        DrinkDefinitionSummary(
+            id: "mstand-coconut-latte",
+            name: "生椰拿铁",
+            category: "咖啡",
+            brand: "M Stand",
+            brandCollection: "创意咖啡",
+            tags: ["椰乳", "奶咖", "高频"],
+            heroFlavor: "椰香奶咖",
+            preparationMethods: [.espressoMachine, .readyToDrink],
+            metrics: IngredientMetrics(caffeineMG: 125, sugarG: 10, caloriesKcal: 178, hydrationML: 280, volumeML: 360),
+            servingOptions: [.init(id: "regular", name: "标准杯", volumeML: 360, multiplier: 1.0)]
+        ),
+        DrinkDefinitionSummary(
+            id: "bo-ya-jue-xian",
+            name: "伯牙绝弦",
+            category: "奶茶",
+            brand: "霸王茶姬",
+            brandCollection: "招牌奶茶",
+            tags: ["乌龙", "奶茶", "品牌款"],
+            heroFlavor: "茶香奶韵",
+            preparationMethods: [.milkTea, .readyToDrink],
+            metrics: IngredientMetrics(caffeineMG: 82, sugarG: 22, caloriesKcal: 240, hydrationML: 430, volumeML: 500),
+            servingOptions: [.init(id: "less-sugar", name: "少糖", volumeML: 500, multiplier: 0.9)]
+        ),
+        DrinkDefinitionSummary(
+            id: "grape-jasmine",
+            name: "多肉葡萄",
+            category: "奶茶",
+            brand: "喜茶",
+            brandCollection: "果茶",
+            tags: ["果茶", "高糖", "品牌款"],
+            heroFlavor: "葡萄茉莉",
+            preparationMethods: [.milkTea, .readyToDrink],
+            metrics: IngredientMetrics(caffeineMG: 28, sugarG: 26, caloriesKcal: 210, hydrationML: 420, volumeML: 500),
+            servingOptions: [.init(id: "regular", name: "标准杯", volumeML: 500, multiplier: 1.0)]
+        ),
+        DrinkDefinitionSummary(
+            id: "nayuki-dominant-orange",
+            name: "霸气橙子",
+            category: "奶茶",
+            brand: "奈雪",
+            brandCollection: "水果茶",
+            tags: ["果茶", "高频", "鲜果"],
+            heroFlavor: "橙香绿茶",
+            preparationMethods: [.milkTea, .readyToDrink],
+            metrics: IngredientMetrics(caffeineMG: 24, sugarG: 20, caloriesKcal: 168, hydrationML: 450, volumeML: 500),
+            servingOptions: [.init(id: "regular", name: "标准杯", volumeML: 500, multiplier: 1.0)]
+        ),
+        DrinkDefinitionSummary(
+            id: "coco-pearl-milk-tea",
+            name: "珍珠奶茶",
+            category: "奶茶",
+            brand: "CoCo",
+            brandCollection: "经典奶茶",
+            tags: ["奶茶", "珍珠", "高频"],
+            heroFlavor: "红茶奶香",
+            preparationMethods: [.milkTea, .readyToDrink],
+            metrics: IngredientMetrics(caffeineMG: 62, sugarG: 31, caloriesKcal: 290, hydrationML: 430, volumeML: 500),
+            servingOptions: [.init(id: "less-sugar", name: "少糖", volumeML: 500, multiplier: 0.9)]
+        ),
+        DrinkDefinitionSummary(
+            id: "cotti-coconut-latte",
+            name: "生椰米乳拿铁",
+            category: "咖啡",
+            brand: "库迪",
+            brandCollection: "日常通勤",
+            tags: ["奶咖", "通勤", "椰香"],
+            heroFlavor: "椰乳谷物",
+            preparationMethods: [.espressoMachine, .readyToDrink],
+            metrics: IngredientMetrics(caffeineMG: 118, sugarG: 11, caloriesKcal: 182, hydrationML: 285, volumeML: 360),
+            servingOptions: [.init(id: "regular", name: "标准杯", volumeML: 360, multiplier: 1.0)]
+        ),
+        DrinkDefinitionSummary(
+            id: "luckin-thick-milk-latte",
+            name: "厚乳拿铁",
+            category: "咖啡",
+            brand: "幸运咖",
+            brandCollection: "日常咖啡",
+            tags: ["奶咖", "高频", "厚乳"],
+            heroFlavor: "浓奶甜感",
+            preparationMethods: [.espressoMachine, .readyToDrink],
+            metrics: IngredientMetrics(caffeineMG: 116, sugarG: 13, caloriesKcal: 176, hydrationML: 270, volumeML: 340),
+            servingOptions: [.init(id: "regular", name: "标准杯", volumeML: 340, multiplier: 1.0)]
+        ),
+        DrinkDefinitionSummary(
+            id: "seesaw-chocolate-americano",
+            name: "黑巧美式",
+            category: "咖啡",
+            brand: "Seesaw",
+            brandCollection: "城市咖啡",
+            tags: ["美式", "创意咖啡", "可可"],
+            heroFlavor: "黑巧可可",
+            preparationMethods: [.espressoMachine],
+            metrics: IngredientMetrics(caffeineMG: 142, sugarG: 5, caloriesKcal: 56, hydrationML: 300, volumeML: 360),
+            servingOptions: [.init(id: "large", name: "大杯", volumeML: 360, multiplier: 1.0)]
+        ),
+        DrinkDefinitionSummary(
+            id: "chabaidao-yuqilin",
+            name: "豆乳玉麒麟",
+            category: "奶茶",
+            brand: "茶百道",
+            brandCollection: "招牌奶茶",
+            tags: ["豆乳", "乌龙", "高频"],
+            heroFlavor: "豆乳乌龙",
+            preparationMethods: [.milkTea, .readyToDrink],
+            metrics: IngredientMetrics(caffeineMG: 64, sugarG: 24, caloriesKcal: 238, hydrationML: 420, volumeML: 500),
+            servingOptions: [.init(id: "less-sugar", name: "少糖", volumeML: 500, multiplier: 0.88)]
+        ),
+        DrinkDefinitionSummary(
+            id: "guming-cheese-grape",
+            name: "超A芝士葡萄",
+            category: "奶茶",
+            brand: "古茗",
+            brandCollection: "果茶",
+            tags: ["果茶", "芝士", "鲜果"],
+            heroFlavor: "葡萄芝士",
+            preparationMethods: [.milkTea, .readyToDrink],
+            metrics: IngredientMetrics(caffeineMG: 26, sugarG: 25, caloriesKcal: 214, hydrationML: 435, volumeML: 500),
+            servingOptions: [.init(id: "regular", name: "标准杯", volumeML: 500, multiplier: 1.0)]
+        ),
+        DrinkDefinitionSummary(
+            id: "hushang-yangzhi",
+            name: "杨枝甘露",
+            category: "奶茶",
+            brand: "沪上阿姨",
+            brandCollection: "水果乳饮",
+            tags: ["芒果", "西米", "高频"],
+            heroFlavor: "芒果西柚",
+            preparationMethods: [.milkTea, .readyToDrink],
+            metrics: IngredientMetrics(caffeineMG: 18, sugarG: 29, caloriesKcal: 260, hydrationML: 410, volumeML: 500),
+            servingOptions: [.init(id: "regular", name: "标准杯", volumeML: 500, multiplier: 1.0)]
+        ),
+    ]
+
+    static let userDrinkTemplates: [UserDrinkTemplate] = [
+        UserDrinkTemplate(
+            id: "user-cold-brew-home",
+            brand: "我的常喝",
+            name: "家里冷萃",
+            category: "咖啡",
+            caffeineMG: 110,
+            sugarG: 0,
+            volumeML: 280,
+            preparationMethod: .readyToDrink
+        ),
     ]
 
     static let entries: [DrinkLogEntry] = [
@@ -620,14 +1043,38 @@ enum PreviewFixtures {
         profile: profile
     )
 
-    static let dashboard = dashboard(for: .now, entries: entries, goals: goals, profile: profile, recommendations: recommendations)
+    static let caffeineForecast = buildCaffeineForecast(entries: entries, profile: profile, preferences: userPreferences)
+
+    static let aiBrief = buildAIBrief(
+        aggregate: entries.reduce(into: .zero) { partialResult, entry in
+            partialResult = partialResult.adding(entry.metrics)
+        },
+        goals: goals,
+        profile: profile,
+        forecast: caffeineForecast,
+        recommendations: recommendations
+    )
+
+    static let dashboard = dashboard(
+        for: .now,
+        entries: entries,
+        goals: goals,
+        profile: profile,
+        preferences: userPreferences,
+        recommendations: recommendations,
+        caffeineForecast: caffeineForecast,
+        aiBrief: aiBrief
+    )
 
     static func dashboard(
         for date: Date,
         entries: [DrinkLogEntry],
         goals: HealthGoalsSummary,
         profile: UserProfileSummary,
-        recommendations: [RecommendationCard]? = nil
+        preferences: UserPreferenceSnapshot = userPreferences,
+        recommendations: [RecommendationCard]? = nil,
+        caffeineForecast: CaffeineForecastSummary? = nil,
+        aiBrief: DailyAIBriefSummary? = nil
     ) -> DashboardState {
         let aggregate = entries.reduce(into: IngredientMetrics.zero) { partialResult, entry in
             partialResult = partialResult.adding(entry.metrics)
@@ -652,7 +1099,15 @@ enum PreviewFixtures {
             goals: goals,
             recommendations: recommendations ?? buildRecommendations(aggregate: aggregate, goals: goals, profile: profile),
             todayEntries: entries.sorted { $0.consumedAt > $1.consumedAt },
-            categoryBreakdown: breakdown
+            categoryBreakdown: breakdown,
+            caffeineForecast: caffeineForecast ?? buildCaffeineForecast(entries: entries, profile: profile, preferences: preferences),
+            aiBrief: aiBrief ?? buildAIBrief(
+                aggregate: aggregate,
+                goals: goals,
+                profile: profile,
+                forecast: caffeineForecast ?? buildCaffeineForecast(entries: entries, profile: profile, preferences: preferences),
+                recommendations: recommendations ?? buildRecommendations(aggregate: aggregate, goals: goals, profile: profile)
+            )
         )
     }
 
@@ -763,5 +1218,200 @@ enum PreviewFixtures {
         }
 
         return cards
+    }
+
+    static func buildCaffeineForecast(
+        entries: [DrinkLogEntry],
+        profile: UserProfileSummary,
+        preferences: UserPreferenceSnapshot = userPreferences,
+        now: Date = .now
+    ) -> CaffeineForecastSummary {
+        let halfLife = preferences.halfLifeHours
+        let safeThreshold = preferences.safeSleepThresholdMG
+        let sleepAt = preferences.nextSleepDate(from: now)
+        let currentEstimate = remainingCaffeine(entries: entries, at: now, halfLifeHours: halfLife)
+        let projectedSleep = remainingCaffeine(entries: entries, at: sleepAt, halfLifeHours: halfLife)
+        let readiness = sleepStage(for: projectedSleep, safeThreshold: safeThreshold)
+        let recommendedSleepTime = recommendedSleepDate(
+            entries: entries,
+            start: now,
+            halfLifeHours: halfLife,
+            safeThreshold: safeThreshold
+        )
+
+        let timelineEnd = min(max(sleepAt, now.addingTimeInterval(4 * 3600)).addingTimeInterval(4 * 3600), now.addingTimeInterval(12 * 3600))
+        var timeline: [CaffeineForecastPointSummary] = []
+        var cursor = now
+        while cursor <= timelineEnd {
+            let remaining = remainingCaffeine(entries: entries, at: cursor, halfLifeHours: halfLife)
+            timeline.append(
+                CaffeineForecastPointSummary(
+                    at: cursor,
+                    remainingCaffeineMG: remaining,
+                    stage: sleepStage(for: remaining, safeThreshold: safeThreshold)
+                )
+            )
+            cursor = cursor.addingTimeInterval(3600)
+        }
+
+        return CaffeineForecastSummary(
+            calculatedAt: now,
+            sleepAt: sleepAt,
+            halfLifeHours: halfLife,
+            currentEstimateMG: currentEstimate,
+            projectedSleepMG: projectedSleep,
+            safeSleepThresholdMG: safeThreshold,
+            recommendedSleepTime: recommendedSleepTime,
+            sleepReadiness: readiness,
+            summary: buildForecastSummary(
+                sleepAt: sleepAt,
+                projectedSleepMG: projectedSleep,
+                readiness: readiness,
+                recommendedSleepTime: recommendedSleepTime
+            ),
+            sleepImpact: buildSleepImpact(
+                readiness: readiness,
+                safeThreshold: safeThreshold,
+                projectedSleepMG: projectedSleep
+            ),
+            timeline: timeline
+        )
+    }
+
+    static func buildAIBrief(
+        aggregate: IngredientMetrics,
+        goals: HealthGoalsSummary,
+        profile: UserProfileSummary,
+        forecast: CaffeineForecastSummary,
+        recommendations: [RecommendationCard],
+        mode: String = "fallback"
+    ) -> DailyAIBriefSummary {
+        let actions = aiActions(aggregate: aggregate, goals: goals, forecast: forecast)
+        return DailyAIBriefSummary(
+            mode: mode,
+            generatedAt: .now,
+            headline: recommendations.first?.title ?? "今天的饮品节奏相对平稳",
+            narrative: "今天累计咖啡因 \(Int(aggregate.caffeineMG))mg、糖分 \(Int(aggregate.sugarG))g。按 \(profile.sleepHourText) 入睡估算，\(forecast.summary)",
+            nextActions: actions,
+            sleepNote: forecast.sleepImpact
+        )
+    }
+
+    private static func aiActions(
+        aggregate: IngredientMetrics,
+        goals: HealthGoalsSummary,
+        forecast: CaffeineForecastSummary
+    ) -> [String] {
+        var actions: [String] = []
+        if forecast.sleepReadiness != .sleepFriendly {
+            actions.append("今晚后续优先无咖啡因饮品，把提神换成走动或补水。")
+        }
+        if aggregate.sugarG >= goals.sugarLimitG * 0.8 {
+            actions.append("下一杯优先无糖或半糖版本，先把液体糖停下来。")
+        }
+        if aggregate.hydrationML < goals.hydrationGoalML * 0.75 {
+            actions.append("补一杯白水或无糖茶，把补水目标往前追回来。")
+        }
+        if actions.isEmpty {
+            actions.append("继续保持当前节奏，观察后半天的变化。")
+        }
+        return Array(actions.prefix(3))
+    }
+
+    private static func nextSleepDate(from now: Date, sleepText: String) -> Date {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "HH:mm"
+        let timeDate = formatter.date(from: sleepText) ?? now
+        let calendar = Calendar.current
+        let components = calendar.dateComponents([.hour, .minute], from: timeDate)
+        let todaySleep = calendar.date(
+            bySettingHour: components.hour ?? 23,
+            minute: components.minute ?? 30,
+            second: 0,
+            of: now
+        ) ?? now
+        if todaySleep > now {
+            return todaySleep
+        }
+        return calendar.date(byAdding: .day, value: 1, to: todaySleep) ?? todaySleep
+    }
+
+    private static func remainingCaffeine(entries: [DrinkLogEntry], at date: Date, halfLifeHours: Double) -> Double {
+        let rate = log(2) / halfLifeHours
+        let total = entries.reduce(0.0) { partialResult, entry in
+            guard entry.metrics.caffeineMG > 0, entry.consumedAt <= date else {
+                return partialResult
+            }
+            let elapsed = max(date.timeIntervalSince(entry.consumedAt) / 3600, 0)
+            return partialResult + entry.metrics.caffeineMG * Foundation.exp(-rate * elapsed)
+        }
+        return total.rounded(toPlaces: 1)
+    }
+
+    private static func sleepStage(for remaining: Double, safeThreshold: Double) -> SleepReadinessState {
+        if remaining <= safeThreshold {
+            return .sleepFriendly
+        }
+        if remaining <= safeThreshold * 2 {
+            return .watch
+        }
+        return .likelyDisruptive
+    }
+
+    private static func recommendedSleepDate(
+        entries: [DrinkLogEntry],
+        start: Date,
+        halfLifeHours: Double,
+        safeThreshold: Double
+    ) -> Date? {
+        if remainingCaffeine(entries: entries, at: start, halfLifeHours: halfLifeHours) <= safeThreshold {
+            return start
+        }
+        for step in 1 ... 72 {
+            let candidate = start.addingTimeInterval(Double(step) * 1800)
+            if remainingCaffeine(entries: entries, at: candidate, halfLifeHours: halfLifeHours) <= safeThreshold {
+                return candidate
+            }
+        }
+        return nil
+    }
+
+    private static func buildForecastSummary(
+        sleepAt: Date,
+        projectedSleepMG: Double,
+        readiness: SleepReadinessState,
+        recommendedSleepTime: Date?
+    ) -> String {
+        let sleepText = sleepAt.formatted(date: .omitted, time: .shortened)
+        if readiness == .sleepFriendly {
+            return "按 \(sleepText) 入睡计算，届时预计剩余 \(Int(projectedSleepMG))mg 咖啡因，影响相对可控。"
+        }
+        if let recommendedSleepTime {
+            return "按 \(sleepText) 入睡计算，届时预计仍有 \(Int(projectedSleepMG))mg 残留，更接近适合入睡的时间大约在 \(recommendedSleepTime.formatted(date: .omitted, time: .shortened))。"
+        }
+        return "按 \(sleepText) 入睡计算，届时预计仍有 \(Int(projectedSleepMG))mg 残留，今晚更可能拖慢入睡。"
+    }
+
+    private static func buildSleepImpact(
+        readiness: SleepReadinessState,
+        safeThreshold: Double,
+        projectedSleepMG: Double
+    ) -> String {
+        switch readiness {
+        case .sleepFriendly:
+            return "睡前残留约 \(Int(projectedSleepMG))mg，低于参考阈值 \(Int(safeThreshold))mg。"
+        case .watch:
+            return "睡前残留约 \(Int(projectedSleepMG))mg，仍高于参考阈值，可能让你更浅眠。"
+        case .likelyDisruptive:
+            return "睡前残留约 \(Int(projectedSleepMG))mg，明显高于参考阈值，更容易拖慢入睡。"
+        }
+    }
+}
+
+private extension Double {
+    func rounded(toPlaces places: Int) -> Double {
+        let divisor = pow(10.0, Double(places))
+        return (self * divisor).rounded() / divisor
     }
 }

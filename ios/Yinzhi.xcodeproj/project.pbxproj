@@ -20,6 +20,8 @@
 		BABBA089DE956DFF9FB03DC2 /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = E36D72517F931DE38E05922B /* DesignSystem.swift */; };
 		C96373AE55C336FC7472BBA0 /* SessionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9122487578B49CD2EB7C51E /* SessionStore.swift */; };
 		E0E87A9BFBE21FA0C6F1D9FB /* OfflineCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CFBAF2DF0653639D21DFD99 /* OfflineCache.swift */; };
+		F11A0C4E0A1B2C3D4E5F6071 /* QuickCaptureSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11A0C4E0A1B2C3D4E5F6073 /* QuickCaptureSupport.swift */; };
+		F11A0C4E0A1B2C3D4E5F6072 /* QuickCaptureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11A0C4E0A1B2C3D4E5F6074 /* QuickCaptureTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -33,7 +35,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		145A00933EC9F96BDF9B98B6 /* Yinzhi.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Yinzhi.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		145A00933EC9F96BDF9B98B6 /* Yinzhi.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Yinzhi.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1B4A7F4828B7F1C72F62AAD9 /* AppModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModels.swift; sourceTree = "<group>"; };
 		2965E09121192E51639D5B86 /* AppConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfig.swift; sourceTree = "<group>"; };
 		3CFBAF2DF0653639D21DFD99 /* OfflineCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OfflineCache.swift; sourceTree = "<group>"; };
@@ -49,6 +51,8 @@
 		E36D72517F931DE38E05922B /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
 		E3995D7DFD51DADBAA97B150 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
 		EBF6D36033A1AC2D14EB371D /* LogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogView.swift; sourceTree = "<group>"; };
+		F11A0C4E0A1B2C3D4E5F6073 /* QuickCaptureSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickCaptureSupport.swift; sourceTree = "<group>"; };
+		F11A0C4E0A1B2C3D4E5F6074 /* QuickCaptureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickCaptureTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -161,6 +165,7 @@
 		DF231B726D2F98718EF9E180 /* YinzhiTests */ = {
 			isa = PBXGroup;
 			children = (
+				F11A0C4E0A1B2C3D4E5F6074 /* QuickCaptureTests.swift */,
 				851E9BEF1C7DFA5A7BCED10B /* SmokeTests.swift */,
 			);
 			path = YinzhiTests;
@@ -190,6 +195,7 @@
 			isa = PBXGroup;
 			children = (
 				EBF6D36033A1AC2D14EB371D /* LogView.swift */,
+				F11A0C4E0A1B2C3D4E5F6073 /* QuickCaptureSupport.swift */,
 			);
 			path = Log;
 			sourceTree = "<group>";
@@ -281,6 +287,7 @@
 				632B1F3972E5682B64127013 /* HomeView.swift in Sources */,
 				2F2D2FD7731724BC6FCDCC65 /* InsightsView.swift in Sources */,
 				7853952B565DA8BD673EB3B5 /* LogView.swift in Sources */,
+				F11A0C4E0A1B2C3D4E5F6071 /* QuickCaptureSupport.swift in Sources */,
 				E0E87A9BFBE21FA0C6F1D9FB /* OfflineCache.swift in Sources */,
 				9DA39DE55F477E09E19BB2ED /* OnboardingView.swift in Sources */,
 				54F3EACAC17DDCE8B21C3A4F /* ProfileView.swift in Sources */,
@@ -293,6 +300,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F11A0C4E0A1B2C3D4E5F6072 /* QuickCaptureTests.swift in Sources */,
 				35EDC78D686DCEF6988A9379 /* SmokeTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -343,7 +351,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = VT6KR33Y52;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -365,13 +373,16 @@
 			};
 			name = Release;
 		};
-		0CE019A95205D5538051EC7C /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_IDENTITY = "iPhone Developer";
-				INFOPLIST_FILE = Yinzhi/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "饮知";
+			0CE019A95205D5538051EC7C /* Debug */ = {
+				isa = XCBuildConfiguration;
+				buildSettings = {
+					ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+					CODE_SIGN_IDENTITY = "Apple Development";
+					CODE_SIGN_STYLE = Automatic;
+					CURRENT_PROJECT_VERSION = 1.0.0;
+					DEVELOPMENT_TEAM = VT6KR33Y52;
+					INFOPLIST_FILE = Yinzhi/Info.plist;
+					INFOPLIST_KEY_CFBundleDisplayName = "饮知";
 				INFOPLIST_KEY_NSAppTransportSecurity_NSAllowsLocalNetworking = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
 				INFOPLIST_KEY_YINZHI_API_BASE_URL = "http://127.0.0.1:8000";
@@ -382,19 +393,22 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.luca.yinzhi;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
 		};
-		307E9BE8DD78EB5B6A7FB3EE /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				GENERATE_INFOPLIST_FILE = YES;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
+			307E9BE8DD78EB5B6A7FB3EE /* Debug */ = {
+				isa = XCBuildConfiguration;
+				buildSettings = {
+					BUNDLE_LOADER = "$(TEST_HOST)";
+					CODE_SIGN_STYLE = Automatic;
+					DEVELOPMENT_TEAM = VT6KR33Y52;
+					GENERATE_INFOPLIST_FILE = YES;
+					LD_RUNPATH_SEARCH_PATHS = (
+						"$(inherited)",
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
@@ -407,13 +421,16 @@
 			};
 			name = Debug;
 		};
-		53888320D85310D17E4193C3 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_IDENTITY = "iPhone Developer";
-				INFOPLIST_FILE = Yinzhi/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "饮知";
+			53888320D85310D17E4193C3 /* Release */ = {
+				isa = XCBuildConfiguration;
+				buildSettings = {
+					ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+					CODE_SIGN_IDENTITY = "Apple Development";
+					CODE_SIGN_STYLE = Automatic;
+					CURRENT_PROJECT_VERSION = 1.0.0;
+					DEVELOPMENT_TEAM = VT6KR33Y52;
+					INFOPLIST_FILE = Yinzhi/Info.plist;
+					INFOPLIST_KEY_CFBundleDisplayName = "饮知";
 				INFOPLIST_KEY_NSAppTransportSecurity_NSAllowsLocalNetworking = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
 				INFOPLIST_KEY_YINZHI_API_BASE_URL = "http://127.0.0.1:8000";
@@ -424,6 +441,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.luca.yinzhi;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -465,7 +483,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = VT6KR33Y52;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -494,13 +512,15 @@
 			};
 			name = Debug;
 		};
-		D5F304611B44D441185DD6CF /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				GENERATE_INFOPLIST_FILE = YES;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
+			D5F304611B44D441185DD6CF /* Release */ = {
+				isa = XCBuildConfiguration;
+				buildSettings = {
+					BUNDLE_LOADER = "$(TEST_HOST)";
+					CODE_SIGN_STYLE = Automatic;
+					DEVELOPMENT_TEAM = VT6KR33Y52;
+					GENERATE_INFOPLIST_FILE = YES;
+					LD_RUNPATH_SEARCH_PATHS = (
+						"$(inherited)",
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);

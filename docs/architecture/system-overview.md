@@ -1,17 +1,18 @@
 # 饮知系统架构总览
 
 ## 目标
-饮知 v1.1 采用前后端分离架构，确保 iOS 客户端、后端 API、数据与运营能力可以独立演进，同时让 AI 能依靠稳定文档与清晰接口持续维护。
+饮知当前采用“本地优先、后端辅助”的架构路线，确保核心记录链路在 Apple 生态内无网也可用，同时保留目录、support/admin 和未来跨平台扩展的工程后路。
 
 ## 系统分层
-- `iOS App`: SwiftUI 客户端，负责界面、离线缓存、系统能力集成、Typed Client 与同步编排。
-- `Python API`: FastAPI 模块化单体，负责鉴权、饮品目录、品牌与冲泡计算、饮品记录、洞察聚合、推荐决策、导出任务、LLM 接口适配和内部管理接口。
-- `Data/Admin`: PostgreSQL、Redis、对象存储与内部管理后台能力。当前仓库已将核心数据持久化到 SQLAlchemy 仓储层，开发期默认 SQLite，生产目标仍是 PostgreSQL。
+- `iOS App`: SwiftUI 客户端，负责界面、本地持久化、离线记录、确定性咖啡因计算、系统能力集成、Typed Client 与同步编排。
+- `Local Data + Sync`: 本地数据访问与 `SyncProvider` 同步层。当前 Apple 生态内以 `ICloudKeyValueSyncProvider / LocalOnlySyncProvider` 为主。
+- `Python API`: FastAPI 模块化单体，负责品牌目录、support/admin、可选导出、LLM/support 适配、开发联调和未来跨平台同步扩展缝。
+- `Data/Admin`: 当前后端持久化与管理后台基础设施。开发期默认 SQLite，后续需要时可切换 PostgreSQL / Redis / 对象存储。
 
 ## 真源策略
-- 服务端是真正的业务真源。
-- iOS 本地缓存用于离线记录和 UI 响应，不承担跨设备一致性责任。
-- 同步以 `SyncEnvelope` 作为边界对象，记录版本、时间戳和待同步状态。
+- 当前 Apple 生态内，用户日志、个人设置、个人饮品模板以本地数据为主真源。
+- 同步通过 `SyncProvider` 隔离；`iCloud` 是增强路径，`LocalOnly` 是合法运行模式。
+- 后端不再作为当前用户日志的默认真源，而是承担目录、后台和未来跨生态同步接入点。
 
 ## API 边界
 - `/v1/auth/apple`
@@ -26,19 +27,23 @@
 - `/v1/admin/*`
 - `/support`
 
-## 饮品与建议能力
+说明：
+- 这些接口目前仍存在于后端代码中，便于开发联调、support/admin 与未来扩展。
+- 但当前产品路线下，主记录链路不以后端接口可用性作为前提条件。
+
+## 饮品与辅助能力
 - 饮品目录以品牌化定义为主，支持 `brandCollection`、风味标签、冲泡方法和默认配方摘要。
-- 记录模型已预留 `brand` 与 `preparationMethod` 字段，便于后续接入更细的分析和个性化阈值。
+- 本地记录模型保留 `brand` 与 `preparationMethod` 字段，便于本地计算与未来目录对齐。
 - 冲泡计算首版提供 hand brew / espresso-machine 风格的参数计算，便于记录页直接给出克数、出液量和预估咖啡因。
-- LLM 能力当前定位为 support 平台的开发者联调入口，严格走 OpenAI 兼容接口，不直接进入用户开放聊天路径。
+- LLM 能力当前定位为 support 平台的开发者联调入口，严格走 OpenAI 兼容接口，不进入用户主记录链路。
 
 ## iOS 体验边界
 - 首页、记录、分析、我的四个顶级区块。
 - Liquid Glass 仅应用于导航条、关键卡片、主 CTA、状态 chips 和弹出层。
 - iOS 26+ 使用系统玻璃 API；iOS 17-25 使用 `ultraThinMaterial` fallback。
-- 首页强调「结论先行」和更轻的信息密度；记录页扩展为品牌筛选、冲泡实验区和更强的快捷录入体验。
+- 首页强调当前咖啡因与入睡残留；记录页强调快速录入与品牌目录；分析页强调咖啡因时间视图；我的页强调多级设置。
 
 ## 后续演进
-- 将当前 SQLAlchemy 持久化从 SQLite 开发库切换到 PostgreSQL 实例，并补 Alembic 迁移。
-- 将导出任务和同步任务迁移到后台队列。
-- 在不改变 API 契约的前提下扩展 Android/Web 客户端。
+- 完成 iCloud / CloudKit 真同步验收，补 Apple 生态内真实多设备一致性验证。
+- 保持后端作为品牌目录、support/admin 和可选远程能力承载层，而不是重新默认接管本地主链路。
+- 如果未来扩展 Android / Web / HarmonyOS，再评估新的远程 `SyncProvider` 或服务端真源方案。
