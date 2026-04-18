@@ -13,6 +13,7 @@
 5. [本地开发环境](./architecture/local-environment.md)
 6. 根目录 [agent.md](../agent.md)
 7. 根目录 [README.md](../README.md)
+8. HarmonyOS 端 [harmony/README.md](../harmony/README.md)
 
 ## 当前真源
 
@@ -22,7 +23,7 @@
 
 ### 产品真源
 - `docs/product/v1-scope.md`
-- 当前路线：`离线记录 + 咖啡因 / 入睡影响理解 + Apple 生态同步`
+- 当前路线：`离线记录 + 咖啡因 / 入睡影响理解 + iOS / HarmonyOS 并行客户端`
 
 ### 质量真源
 - `docs/quality/verification-matrix.md`

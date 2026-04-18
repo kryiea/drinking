@@ -1,0 +1,10 @@
+{
+  // Stage model stays the same for HarmonyOS 6; the SDK level will be raised after the Beta toolchain is available locally.
+  "apiType": "stageMode",
+  "targets": [
+    {
+      "name": "default",
+      "runtimeOS": "HarmonyOS"
+    }
+  ]
+}

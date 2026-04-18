@@ -1,0 +1,8 @@
+{
+  "modelVersion": "6.0.2",
+  "name": "yinzhi-harmony",
+  "version": "1.0.0",
+  "description": "Local-first HarmonyOS adaptation of Yinzhi with caffeine tracking, quick drink logging, and sleep-aware insights.",
+  "dependencies": {},
+  "devDependencies": {}
+}

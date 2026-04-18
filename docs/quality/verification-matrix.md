@@ -4,12 +4,14 @@
 - `pytest backend/tests`
 - `swift test`
 - `xcodebuild -project ios/Yinzhi.xcodeproj -scheme Yinzhi -destination 'platform=iOS Simulator,id=<simulator-id>' build`
+- `./scripts/check-harmony-env.sh`
 - 文档索引检查: `docs/README.md`、`openspec/README.md`、`agent.md` 是否同步更新，OpenSpec 变更是否齐全
 - README 截图检查: `README.md` 中的页面与关键功能截图是否与当前 App 状态一致
 
 ## 环境受限项
 - iOS UI 测试与截图回归
 - HealthKit、Sign in with Apple、真实后台同步联调
+- HarmonyOS 正式签名配置与设备安装验证
 
 ## 核心断言
 - 视图层不得直接使用 `URLSession`
@@ -19,6 +21,7 @@
 - 品牌、冲泡方式与记录模型字段必须在 API、持久化和客户端模型中保持一致
 - 本地缓存链路必须保留品牌与冲泡方式，不能在离线记录后退化成“未标记品牌”
 - 后端故障、未配置或弱网状态不得阻断“记一杯 -> 看当前咖啡因 -> 看入睡残留”主链路
+- HarmonyOS 端必须继续维持与 iOS 一致的四页信息架构和本地优先计算方向
 - 添加饮品后的全局反馈层必须浮在 tab bar 之上，并且包含记录结果、睡眠影响和同步状态三类信息
 - 首页、记录页、分析页、我的页的滚动内容都不能让关键 CTA 或关键解释长期被 tab chrome 截断
 - 图片识别链路必须本地完成 OCR，并在无法匹配目录时给出可继续搜索的关键词回退

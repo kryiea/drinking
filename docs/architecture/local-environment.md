@@ -15,10 +15,13 @@
 - 将当前 macOS 代理桥接到 Podman machine: `zsh ./scripts/configure-podman-proxy.sh`
 - 生成 iOS 工程: `./scripts/generate-ios-project.sh`
 - 安装完整 Xcode: `./scripts/install-xcode.sh`
+- 安装 HarmonyOS CLI: `./scripts/setup-harmony-cli.sh`
+- 检查 HarmonyOS 环境: `./scripts/check-harmony-env.sh`
 
 ## 当前开发优先级
 - 当前产品主链路是本地优先，因此即使后端或中间件暂时不可用，也可以继续推进：
   - iOS 页面
+  - HarmonyOS 页面
   - 本地记录与设置
   - 领域模型与确定性计算
   - iCloud / `SyncProvider` 边界
@@ -49,6 +52,37 @@
 - 当宿主机走本地代理，例如 `127.0.0.1:6454` 时，Podman VM 内无法直接访问宿主机回环地址，需要把代理改写为 `host.containers.internal:<port>`。
 - `zsh ./scripts/configure-podman-proxy.sh` 会只在 Podman machine 内为 `podman.service` 写入 `HTTP_PROXY`、`HTTPS_PROXY` 与 `NO_PROXY`，从而解决 `docker.io` 拉镜像超时问题，同时不影响宿主机网络。
 - 如果当前不需要代理，可执行 `zsh ./scripts/configure-podman-proxy.sh --clear` 清除 Podman VM 的代理覆盖。
+
+## HarmonyOS CLI
+- 本机已通过官方归档包安装 HarmonyOS 命令行工具到：
+  - `/Users/luca/.harmony/tools/commandline-tools/command-line-tools/`
+- 当前已确认可执行：
+  - `sdkmgr`
+  - `ohpm`
+  - `codelinter`
+- 本机已安装：
+  - `DevEco Studio 6.0.2`
+  - App 路径：`/Applications/DevEco-Studio.app`
+  - 当前有效 SDK 根：`/Applications/DevEco-Studio.app/Contents/sdk`
+- 官方工具初始化结果：
+  - `ohpm` 已完成 init
+  - `ohpm ping` 可成功访问 `https://repo.harmonyos.com/ohpm/`
+  - `sdkmgr list` 可列出远程组件
+- 当前已完成验证：
+  - `./scripts/check-harmony-env.sh`
+  - `./scripts/prepare-harmony-project.sh`
+  - `cd harmony && ./hvigorw tasks`
+  - `cd harmony && ./hvigorw PackageApp`
+- 当前产物：
+  - `harmony/build/outputs/default/harmony-default-unsigned.app`
+  - `harmony/entry/build/default/outputs/default/entry-default-unsigned.hap`
+- 当前剩余边界：
+  - 默认 product 尚未配置 `signingConfig`
+  - 因此当前是可打包但未正式签名的 HarmonyOS 6 本地产物
+- 额外说明：
+  - 旧版公开 CLI 仍可能在 `sdkmgr install toolchains:9` 上返回 `Could not found download url`
+  - 当前仓库构建不依赖这条旧下载链，而是依赖 `DevEco Studio 6` 的本地 SDK 根
+- 这些步骤未改动宿主机 VPN / 系统代理配置，只在用户目录下安装工具
 
 ## LLM 接入准备
 - 后端已预留 OpenAI 兼容配置：

@@ -35,6 +35,12 @@ OpenSpec 记录的是“为什么发生这次变更、怎么设计、做了什�
 ### 4. 文档治理
 这些 change 主要用于整理信息结构、维护协作质量。
 - `documentation-and-spec-consolidation`
+- `harmony-root-bootstrap`
+
+### 5. 当前平台扩展
+这些 change 让仓库从单一 iOS 主线走向并行平台实现。
+- `harmony-stage-parity-bootstrap`
+- `harmonyos-6-build-enable`
 
 ## 当前推荐阅读顺序
 1. `local-first-architecture-alignment`

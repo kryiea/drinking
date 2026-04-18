@@ -20,6 +20,7 @@
 - 咖啡因时间视图、摄入事件点和入睡时间标记
 - 本地优先缓存与离线记录
 - `UserLocalSnapshot + SyncProvider` 的 iCloud 同步缝
+- HarmonyOS 手机端 `Stage + ArkTS` 工程与四页主结构
 - 多级设置页：睡眠时间、代谢档位、同步与数据、我的饮品、开发连接
 - 后端辅助能力：品牌目录、可选导出接口、开发者 support 平台与目录 / LLM 联调后台
 
@@ -38,6 +39,7 @@
 - 当前 polish 原则是：每个一级页面只强调一个核心任务，不让 roadmap、开发态或长文案抢走首页面主目标。
 - 视觉系统默认跟随系统浅色 / 深色模式，状态色、卡片层级和关键数字在两套外观下都必须保持足够对比度。
 - 当前架构原则是：本地数据主真源，后端增强但不阻塞主记录链路。
+- HarmonyOS 当前目标是先追平 iOS MVP 的页面结构、本地计算和记录主链路，再补系统能力接线。
 
 ## 第一版不包含
 - 用户侧 AI 推荐主叙事
@@ -45,10 +47,9 @@
 - 社区、专家咨询、企业版、订阅付费
 - 条码和实时取景识别
 - 已上线的 iCloud / Widget / Watch 正式 target
-- HarmonyOS 实现
 
 ## 后续阶段
-- `Current Polish`: onboarding / 首页 / 我的页的叙事收口，记录页与分析页微交互完善
+- `Current Polish`: iOS / HarmonyOS 首页、记录页与分析页微交互继续追平
 - `Phase 2`: iCloud capability 真同步验收、Widget、Watch app
 - `Phase 3`: 品牌 seed 扩充、个人饮品管理深化、更多结构化 parser
-- `Later`: HarmonyOS 适配和跨生态同步策略
+- `Later`: HarmonyOS 系统能力补齐与跨生态同步策略

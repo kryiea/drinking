@@ -1,0 +1,16 @@
+#!/bin/zsh
+set -euo pipefail
+
+deveco_app="${DEVECO_STUDIO_APP:-/Applications/DevEco-Studio.app}"
+deveco_sdk_home="${DEVECO_SDK_HOME:-${deveco_app}/Contents/sdk}"
+node_bin="${deveco_app}/Contents/tools/node/bin/node"
+hvigor_js="${deveco_app}/Contents/tools/hvigor/bin/hvigorw.js"
+
+if [[ ! -x "${node_bin}" || ! -f "${hvigor_js}" || ! -d "${deveco_sdk_home}" ]]; then
+  echo "未找到 DevEco Studio 6 自带的 hvigor 工具链。"
+  exit 1
+fi
+
+export DEVECO_SDK_HOME="${deveco_sdk_home}"
+
+exec "${node_bin}" "${hvigor_js}" "$@"

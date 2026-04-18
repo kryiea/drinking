@@ -5,12 +5,14 @@
 
 ## 系统分层
 - `iOS App`: SwiftUI 客户端，负责界面、本地持久化、离线记录、确定性咖啡因计算、系统能力集成、Typed Client 与同步编排。
+- `HarmonyOS App`: ArkTS 客户端，负责与 iOS 保持一致的四页信息架构、本地饮品目录、本地咖啡因计算和后续鸿蒙系统能力接入。
 - `Local Data + Sync`: 本地数据访问与 `SyncProvider` 同步层。当前 Apple 生态内以 `ICloudKeyValueSyncProvider / LocalOnlySyncProvider` 为主。
 - `Python API`: FastAPI 模块化单体，负责品牌目录、support/admin、可选导出、LLM/support 适配、开发联调和未来跨平台同步扩展缝。
 - `Data/Admin`: 当前后端持久化与管理后台基础设施。开发期默认 SQLite，后续需要时可切换 PostgreSQL / Redis / 对象存储。
 
 ## 真源策略
 - 当前 Apple 生态内，用户日志、个人设置、个人饮品模板以本地数据为主真源。
+- HarmonyOS 端当前也遵守本地优先路线，先在端内完成记录、计算和页面编排，再决定后续跨生态同步策略。
 - 同步通过 `SyncProvider` 隔离；`iCloud` 是增强路径，`LocalOnly` 是合法运行模式。
 - 后端不再作为当前用户日志的默认真源，而是承担目录、后台和未来跨生态同步接入点。
 

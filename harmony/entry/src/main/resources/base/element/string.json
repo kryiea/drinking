@@ -1,0 +1,16 @@
+{
+  "string": [
+    {
+      "name": "app_name",
+      "value": "饮知"
+    },
+    {
+      "name": "module_desc",
+      "value": "饮知 HarmonyOS 端"
+    },
+    {
+      "name": "EntryAbility_desc",
+      "value": "饮知主界面入口"
+    }
+  ]
+}

@@ -6,6 +6,7 @@
 - 产品方向：咖啡 / 奶茶优先的日常记录，不做用户侧 AI 推荐主叙事
 - 架构方向：`本地优先、后端辅助`
 - 体验方向：首页只看状态，记录页优先品牌与快速录入，分析页只看咖啡因时间视图
+- 平台状态：`iOS` 为当前成熟端，`HarmonyOS` 已进入 `Stage + ArkTS` 并已在 `HarmonyOS 6.0.2` 工具链下成功本地打包
 - 默认 starter pack：`瑞幸`、`星巴克`、`库迪`、`喜茶`、`霸王茶姬`、`一点点`
 
 ## 页面与功能
@@ -70,6 +71,7 @@
 
 ## 仓库结构
 - `ios/`: SwiftUI iPhone App
+- `harmony/`: HarmonyOS `Stage + ArkTS` 工程与页面实现
 - `backend/`: FastAPI 辅助后端与 support/admin
 - `Sources/YinzhiCore/`: 可独立测试的 Swift 领域逻辑
 - `docs/`: 长期产品、架构、质量文档
@@ -79,9 +81,13 @@
 ## 快速开始
 ```bash
 ./scripts/setup-backend.sh
+./scripts/setup-harmony-cli.sh
 swift test
 source .venv/bin/activate && pytest backend/tests -q
 xcodebuild -project ios/Yinzhi.xcodeproj -scheme Yinzhi -destination 'platform=iOS Simulator,name=iPhone 17 Pro' build
+./scripts/check-harmony-env.sh
+./scripts/prepare-harmony-project.sh
+(cd harmony && ./hvigorw PackageApp)
 ```
 
 ## 文档入口
@@ -89,6 +95,7 @@ xcodebuild -project ios/Yinzhi.xcodeproj -scheme Yinzhi -destination 'platform=i
 - [agent.md](agent.md)：项目地图、当前阶段、活跃变更
 - [openspec/README.md](openspec/README.md)：OpenSpec 变更导航
 - [ADR-0003](docs/decisions/ADR-0003-local-first-architecture.md)：当前正式架构路线
+- [harmony/README.md](harmony/README.md)：HarmonyOS 工程与环境说明
 
 ## 文档清理说明
 - `ADR-0001`、`ADR-0002` 继续保留为历史记录，但当前路线统一以 `ADR-0003` 为准

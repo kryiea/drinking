@@ -16,3 +16,12 @@ backend/.env
 backend/dev.db
 backend/*.egg-info/
 infra/.env
+harmony/.hvigor/
+harmony/.preview/
+harmony/.idea/
+harmony/.cxx/
+harmony/local.properties
+harmony/build/
+harmony/entry/build/
+harmony/entry/.preview/
+.hvigor/
